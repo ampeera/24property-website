@@ -1,0 +1,48 @@
+[
+    {
+        "id": "A",
+        "name": "Tomorrowland (Pong)",
+        "icon": "🎵",
+        "center": {
+            "lat": 12.9236,
+            "lng": 101.0186
+        },
+        "zoom": 14,
+        "radius": [
+            1000,
+            3000,
+            5000
+        ],
+        "description": "Prime area for Luxury Villas & Resorts"
+    },
+    {
+        "id": "B",
+        "name": "Highway Rest Stop (Surasak)",
+        "icon": "🛣️",
+        "center": {
+            "lat": 13.1485,
+            "lng": 100.9576
+        },
+        "zoom": 15,
+        "radius": [
+            500,
+            1000
+        ],
+        "description": "Future commercial hub & Rest Area"
+    },
+    {
+        "id": "C",
+        "name": "Industrial (Phanat Nikhom)",
+        "icon": "🏭",
+        "center": {
+            "lat": 13.4522,
+            "lng": 101.1772
+        },
+        "zoom": 13,
+        "radius": [
+            2000,
+            5000
+        ],
+        "description": "Heavy industrial & Warehouse zone"
+    }
+]

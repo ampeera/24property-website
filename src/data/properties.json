@@ -1,0 +1,167 @@
+[
+    {
+        "id": "A-01",
+        "zoneId": "A",
+        "grade": "S",
+        "type": "OWNER",
+        "status": "AVAILABLE",
+        "title": {
+            "en": "Prime Villa Land 1 Rai",
+            "th": "ที่ดินวิลล่า 1 ไร่ โป่ง",
+            "zh": "豪华别墅用地 1 莱"
+        },
+        "price": 12000000,
+        "description": {
+            "en": "Perfect for Private Pool Villas. 3 mins from Wisdom Valley.",
+            "th": "เหมาะทำพูลวิลล่า ใกล้ Wisdom Valley 3 นาที"
+        },
+        "position": {
+            "lat": 12.9236,
+            "lng": 101.0186
+        },
+        "feasibility": {
+            "projectType": "Pool Villa",
+            "yield": 8.5,
+            "breakeven": 5.2,
+            "bestFor": "Daily Rental",
+            "nightlyRate": "4,500 - 6,000"
+        },
+        "currentImage": "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=1200&q=80",
+        "futureImage": "/images/ai-renders/villa-render.png",
+        "images": [
+            "/images/ai-renders/villa-render.png"
+        ]
+    },
+    {
+        "id": "A-02",
+        "zoneId": "A",
+        "grade": "A",
+        "type": "HOT",
+        "status": "AVAILABLE",
+        "title": {
+            "en": "Hillside Plot",
+            "th": "ที่ดินเนินเขา วิวสวย",
+            "zh": "山景地块"
+        },
+        "price": 8500000,
+        "description": {
+            "en": "Great view, priced to sell.",
+            "th": "วิวสวย ราคาดี รีบขาย"
+        },
+        "position": {
+            "lat": 12.9250,
+            "lng": 101.0200
+        },
+        "feasibility": {
+            "projectType": "Vacation Home",
+            "yield": 6.0,
+            "breakeven": 7.5,
+            "bestFor": "Long-term Hold",
+            "nightlyRate": "3,000"
+        },
+        "currentImage": "https://images.unsplash.com/photo-1513836279014-a936c4e12716?auto=format&fit=crop&w=1200&q=80",
+        "futureImage": null,
+        "images": [
+            "https://source.unsplash.com/random/800x600?mountain"
+        ]
+    },
+    {
+        "id": "A-03",
+        "zoneId": "A",
+        "grade": "B",
+        "type": "POTENTIAL",
+        "status": "AVAILABLE",
+        "title": {
+            "en": "Garden Plot",
+            "th": "ที่ดินสวนเกษตร",
+            "zh": "花园地块"
+        },
+        "price": 5000000,
+        "description": {
+            "en": "Good for long term hold.",
+            "th": "เหมาะเก็บเก็งกำไรระยะยาว"
+        },
+        "position": {
+            "lat": 12.9210,
+            "lng": 101.0150
+        },
+        "feasibility": {
+            "projectType": "Agriculture / Cafe",
+            "yield": 4.5,
+            "breakeven": 9.0,
+            "bestFor": "Cafe Business",
+            "nightlyRate": "N/A"
+        },
+        "currentImage": "https://images.unsplash.com/photo-1598543789391-494892c9431e?auto=format&fit=crop&w=1200&q=80",
+        "futureImage": null,
+        "images": [
+            "https://source.unsplash.com/random/800x600?garden"
+        ]
+    },
+    {
+        "id": "B-01",
+        "zoneId": "B",
+        "grade": "S",
+        "type": "OWNER",
+        "status": "AVAILABLE",
+        "title": {
+            "en": "Highway Frontage 2 Rai",
+            "th": "ที่ดินติดหน้าถนน 2 ไร่",
+            "zh": "高速公路临街地块"
+        },
+        "price": 15000000,
+        "description": {
+            "en": "Ideal for Gas Station or Rest Area.",
+            "th": "เหมาะทำปั๊มน้ำมัน หรือจุดพักรถ"
+        },
+        "position": {
+            "lat": 13.1485,
+            "lng": 100.9576
+        },
+        "feasibility": {
+            "projectType": "Commercial Step",
+            "yield": 12.0,
+            "breakeven": 4.0,
+            "bestFor": "Gas Station / Retail",
+            "nightlyRate": "N/A"
+        },
+        "currentImage": "https://images.unsplash.com/photo-1565610261709-672565625a69?auto=format&fit=crop&w=1200&q=80",
+        "futureImage": "/images/ai-renders/reststop-render.png",
+        "images": [
+            "/images/ai-renders/reststop-render.png"
+        ]
+    },
+    {
+        "id": "C-01",
+        "zoneId": "C",
+        "grade": "S",
+        "type": "OWNER",
+        "status": "AVAILABLE",
+        "title": {
+            "en": "Industrial Estate 30 Rai",
+            "th": "ที่ดินนิคมอุตสาหกรรม 30 ไร่",
+            "zh": "工业用地 30 莱"
+        },
+        "price": 45000000,
+        "description": {
+            "en": "Ready for Factory construction.",
+            "th": "พื้นที่สีม่วง พร้อมสร้างโรงงาน"
+        },
+        "position": {
+            "lat": 13.4522,
+            "lng": 101.1772
+        },
+        "feasibility": {
+            "projectType": "Factory / Warehouse",
+            "yield": 10.5,
+            "breakeven": 6.0,
+            "bestFor": "Logistics Hub",
+            "nightlyRate": "N/A"
+        },
+        "currentImage": "https://images.unsplash.com/photo-1621905251189-08b45d6a269e?auto=format&fit=crop&w=1200&q=80",
+        "futureImage": "/images/ai-renders/factory-render.png",
+        "images": [
+            "/images/ai-renders/factory-render.png"
+        ]
+    }
+]
