@@ -6,6 +6,12 @@
   # Directory to publish
   publish = "dist"
 
+# Environment variables for build
+[build.environment]
+  # Disable smart secrets detection for public API keys (like Google Maps)
+  # Google Maps API key is meant to be public (domain-restricted on Google Cloud Console)
+  SECRETS_SCAN_SMART_DETECTION_ENABLED = "false"
+
 # Redirect all requests to index.html for SPA routing
 [[redirects]]
   from = "/*"
