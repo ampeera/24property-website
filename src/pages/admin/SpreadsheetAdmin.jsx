@@ -200,22 +200,31 @@ function SpreadsheetAdmin() {
         setUser(null);
     };
 
+    // Sanitize data - replace newlines with comma+space to prevent row splits
+    const sanitizeForSheet = (value) => {
+        if (typeof value !== 'string') return value;
+        return value.replace(/\r?\n/g, ', ').replace(/\s+,/g, ',').replace(/,\s*,/g, ',');
+    };
+
     // Handle cell value change
     const handleCellChange = async (rowIndex, colIndex, newValue) => {
+        // Sanitize the value to prevent newlines from creating new rows
+        const sanitizedValue = sanitizeForSheet(newValue);
+
         // Update local state
         const newData = [...data];
-        newData[rowIndex][colIndex] = newValue;
+        newData[rowIndex][colIndex] = sanitizedValue;
         setData(newData);
 
         // Track pending change
         const key = `${rowIndex}-${colIndex}`;
-        setPendingChanges(prev => new Map(prev).set(key, { rowIndex, colIndex, value: newValue }));
+        setPendingChanges(prev => new Map(prev).set(key, { rowIndex, colIndex, value: sanitizedValue }));
 
         // If signed in, save immediately
         if (isGoogleSignedIn) {
             try {
                 const cellRef = getCellRef(rowIndex + 2, colIndex); // +2 for header row and 1-indexing
-                await updateCell(cellRef, newValue);
+                await updateCell(cellRef, sanitizedValue);
 
                 // Remove from pending
                 setPendingChanges(prev => {
