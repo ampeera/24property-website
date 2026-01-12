@@ -40,7 +40,7 @@ const COLUMNS = [
     { key: 'ไร่', label: 'ไร่', type: CELL_TYPES.NUMBER, width: 50 },
     { key: 'งาน', label: 'งาน', type: CELL_TYPES.NUMBER, width: 50 },
     { key: 'ตรว', label: 'ตรว', type: CELL_TYPES.NUMBER, width: 50 },
-    { key: 'ลิงก์แผนที่', label: 'แผนที่', type: CELL_TYPES.LINK, width: 80 },
+    { key: 'พิกัด', label: 'พิกัด', type: CELL_TYPES.LINK, width: 120 },
     { key: 'รายละเอียด', label: 'รายละเอียด', type: CELL_TYPES.TEXT, width: 200 },
     { key: 'url รูปภาพปก', label: 'ปก', type: CELL_TYPES.IMAGE, width: 50 },
     { key: 'url รูปภาพจำลอง', label: 'จำลอง', type: CELL_TYPES.IMAGE, width: 50 },

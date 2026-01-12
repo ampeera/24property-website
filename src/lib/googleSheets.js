@@ -162,7 +162,7 @@ const extractCoordinates = (row) => {
     let lat = parseFloat(row['ละติจูด'] || row['Latitude'] || 0);
     let lng = parseFloat(row['ลองจิจูด'] || row['Longitude'] || 0);
 
-    const mapLink = row['ลิงก์แผนที่'] || row['Google Map Link'] || '';
+    const mapLink = row['พิกัด'] || row['ลิงก์แผนที่'] || row['Google Map Link'] || '';
     if ((lat === 0 || lng === 0) && mapLink) {
         // Pattern 1: @lat,lng format (standard Google Maps URL)
         // Example: https://www.google.com/maps/place/.../@12.950744,100.9835819,17z/...
@@ -299,7 +299,7 @@ export const transformToProperty = (row) => {
 
     // Extract coordinates using helper
     const { lat, lng } = extractCoordinates(row);
-    const mapLink = row['ลิงก์แผนที่'] || row['Google Map Link'] || '';
+    const mapLink = row['พิกัด'] || row['ลิงก์แผนที่'] || row['Google Map Link'] || '';
 
     // Land area - note: sheet uses ตรว not ตร.ว.
     const wahValue = row['ตรว'] || row['ตร.ว.'] || row['วา'] || 0;
