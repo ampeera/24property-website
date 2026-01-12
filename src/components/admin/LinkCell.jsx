@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { MapPin, ExternalLink, Copy, Check, Edit2 } from 'lucide-react';
+import { MapPin, ExternalLink, Copy, Check, Edit2, Plus } from 'lucide-react';
 
 function LinkCell({
     value,
@@ -15,7 +15,27 @@ function LinkCell({
     const [editValue, setEditValue] = useState(value || '');
     const [copied, setCopied] = useState(false);
 
-    const hasLink = value && value.length > 0;
+    const hasCoordinates = value && value.length > 0;
+
+    // Generate Google Maps URL from coordinates
+    const getGoogleMapsUrl = (coords) => {
+        if (!coords) return '#';
+
+        // Try to extract lat,lng from the value
+        const match = coords.match(/([\d.-]+),([\d.-]+)/);
+        if (match) {
+            const lat = match[1];
+            const lng = match[2];
+            return `https://www.google.com/maps?q=${lat},${lng}`;
+        }
+
+        // If it's already a URL, return as-is
+        if (coords.startsWith('http')) {
+            return coords;
+        }
+
+        return '#';
+    };
 
     const handleCopy = () => {
         navigator.clipboard.writeText(value);
@@ -67,26 +87,27 @@ function LinkCell({
                     onKeyDown={handleKeyDown}
                     autoFocus
                     className="w-full px-1 py-0.5 text-sm border border-blue-400 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="วาง URL แผนที่..."
+                    placeholder="เช่น 13.18552,100.932901"
                 />
             </td>
         );
     }
 
     return (
-        <td className={baseCellClass} style={{ maxWidth: 80 }}>
+        <td className={baseCellClass} style={{ maxWidth: 120 }}>
             <div
                 className="flex items-center justify-center cursor-pointer"
                 onClick={() => setShowMenu(!showMenu)}
             >
-                {hasLink ? (
+                {hasCoordinates ? (
                     <div className="flex items-center gap-1 text-blue-600 hover:text-blue-700">
                         <MapPin size={14} />
-                        <span className="text-xs">แผนที่</span>
+                        <span className="text-xs truncate max-w-[80px]" title={value}>พิกัด</span>
                     </div>
                 ) : (
-                    <div className="text-gray-400 hover:text-gray-600">
+                    <div className="text-gray-400 hover:text-gray-600 flex items-center gap-1">
                         <MapPin size={14} />
+                        <span className="text-xs">เพิ่มพิกัด</span>
                     </div>
                 )}
             </div>
@@ -98,11 +119,11 @@ function LinkCell({
                         className="fixed inset-0 z-20"
                         onClick={() => setShowMenu(false)}
                     />
-                    <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[140px] overflow-hidden">
-                        {hasLink && (
+                    <div className="absolute left-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-30 min-w-[160px] overflow-hidden">
+                        {hasCoordinates && (
                             <>
                                 <a
-                                    href={value}
+                                    href={getGoogleMapsUrl(value)}
                                     target="_blank"
                                     rel="noreferrer"
                                     className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 text-blue-600"
@@ -116,7 +137,7 @@ function LinkCell({
                                     onClick={handleCopy}
                                 >
                                     {copied ? <Check size={14} className="text-green-500" /> : <Copy size={14} className="text-gray-500" />}
-                                    <span>{copied ? 'คัดลอกแล้ว!' : 'คัดลอก URL'}</span>
+                                    <span>{copied ? 'คัดลอกแล้ว!' : 'คัดลอกพิกัด'}</span>
                                 </div>
                                 <hr className="border-gray-200" />
                             </>
@@ -125,8 +146,17 @@ function LinkCell({
                             className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-gray-50 cursor-pointer"
                             onClick={handleEdit}
                         >
-                            <Edit2 size={14} className="text-gray-500" />
-                            <span>{hasLink ? 'แก้ไข URL' : 'เพิ่ม URL'}</span>
+                            {hasCoordinates ? (
+                                <>
+                                    <Edit2 size={14} className="text-gray-500" />
+                                    <span>แก้ไขพิกัด</span>
+                                </>
+                            ) : (
+                                <>
+                                    <Plus size={14} className="text-green-500" />
+                                    <span>เพิ่มพิกัด</span>
+                                </>
+                            )}
                         </div>
                     </div>
                 </>
