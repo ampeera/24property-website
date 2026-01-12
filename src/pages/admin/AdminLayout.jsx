@@ -9,13 +9,15 @@ import {
     LogOut,
     Menu,
     X,
-    Table2
+    Table2,
+    PlusCircle
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
     { path: '/admin/spreadsheet', icon: Table2, label: 'Spreadsheet' },
+    { path: '/admin/properties/new', icon: PlusCircle, label: 'เพิ่มรายการ' },
 ];
 
 function AdminLayout() {

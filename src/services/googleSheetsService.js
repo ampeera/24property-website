@@ -133,6 +133,27 @@ export const appendRow = async (values) => {
     return data;
 };
 
+// Update an entire row by row number (1-indexed)
+export const updateRow = async (rowNumber, values) => {
+    const sheetName = await getSheetName();
+    const lastColumn = columnToLetter(values.length - 1);
+    const range = `${sheetName}!A${rowNumber}:${lastColumn}${rowNumber}`;
+
+    const data = await makeRequest(
+        `${SHEETS_API_BASE}/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,
+        {
+            method: 'PUT',
+            body: JSON.stringify({
+                range: range,
+                majorDimension: 'ROWS',
+                values: [values]
+            })
+        }
+    );
+
+    return data;
+};
+
 // Delete a row (by clearing and shifting)
 export const deleteRow = async (rowIndex) => {
     const sheetId = parseInt(SHEET_GID);
@@ -246,6 +267,7 @@ export default {
     updateCell,
     updateRange,
     appendRow,
+    updateRow,
     deleteRow,
     insertRow,
     batchUpdate,
