@@ -241,8 +241,15 @@ function PropertyForm() {
                 }
             }
 
-            // Build row array based on sheet headers order
-            const rowData = currentHeaders.map(header => formData[header] || '');
+            // Sanitize data - replace newlines with comma+space to prevent row splits
+            const sanitizeForSheet = (value) => {
+                if (typeof value !== 'string') return value;
+                // Replace newlines with comma+space
+                return value.replace(/\r?\n/g, ', ').replace(/\s+,/g, ',').replace(/,\s*,/g, ',');
+            };
+
+            // Build row array based on sheet headers order (with sanitized values)
+            const rowData = currentHeaders.map(header => sanitizeForSheet(formData[header] || ''));
 
             if (isEditing) {
                 // Find row index and update
