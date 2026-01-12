@@ -4,8 +4,8 @@ import { Navigation, Layers } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import PropertyMarker from './PropertyMarker';
 
-// Fallback API key for development
-const FALLBACK_MAPS_KEY = 'AIzaSyDWCsXRfbSDP8Ugt-HUT8rEWMhFmCH4YV8';
+// Use environment variable for API key (must be set in Netlify)
+const MAPS_API_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
 const containerStyle = {
     width: '100%',
@@ -23,7 +23,7 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
     const { t } = useTranslation();
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
-        googleMapsApiKey: import.meta.env.VITE_GOOGLE_MAPS_API_KEY || FALLBACK_MAPS_KEY
+        googleMapsApiKey: MAPS_API_KEY
     });
 
     const [map, setMap] = useState(null);
