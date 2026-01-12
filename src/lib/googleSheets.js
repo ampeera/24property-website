@@ -164,14 +164,16 @@ const extractCoordinates = (row) => {
 
     const mapLink = row['ลิงก์แผนที่'] || row['Google Map Link'] || '';
     if ((lat === 0 || lng === 0) && mapLink) {
-        // Try @lat,lng format
+        // Pattern 1: @lat,lng format (standard Google Maps URL)
+        // Example: https://www.google.com/maps/place/.../@12.950744,100.9835819,17z/...
         let match = mapLink.match(/@([\d.-]+),([\d.-]+)/);
         if (match) {
             lat = parseFloat(match[1]);
             lng = parseFloat(match[2]);
         }
 
-        // Try !3d{lat}!4d{lng} format
+        // Pattern 2: !3d{lat}!4d{lng} format (embedded/data format)
+        // Example: m2!1e3!4b1!4m4!3m3!8m2!3d12.950744!4d100.9835819
         if (lat === 0 || lng === 0) {
             match = mapLink.match(/!3d([\d.-]+)!4d([\d.-]+)/);
             if (match) {
@@ -180,7 +182,57 @@ const extractCoordinates = (row) => {
             }
         }
 
-        // Try DMS format
+        // Pattern 3: ?q=lat,lng format (query parameter)
+        // Example: https://www.google.com/maps?q=12.950744,100.9835819
+        if (lat === 0 || lng === 0) {
+            match = mapLink.match(/[?&]q=([\d.-]+),([\d.-]+)/);
+            if (match) {
+                lat = parseFloat(match[1]);
+                lng = parseFloat(match[2]);
+            }
+        }
+
+        // Pattern 4: /maps/@lat,lng or place/.../@lat,lng format
+        // Example: https://www.google.com/maps/@12.950744,100.9835819,17z
+        if (lat === 0 || lng === 0) {
+            match = mapLink.match(/\/maps\/@([\d.-]+),([\d.-]+)/);
+            if (match) {
+                lat = parseFloat(match[1]);
+                lng = parseFloat(match[2]);
+            }
+        }
+
+        // Pattern 5: ll=lat,lng format
+        // Example: https://www.google.com/maps/...?ll=12.950744,100.9835819
+        if (lat === 0 || lng === 0) {
+            match = mapLink.match(/[?&]ll=([\d.-]+),([\d.-]+)/);
+            if (match) {
+                lat = parseFloat(match[1]);
+                lng = parseFloat(match[2]);
+            }
+        }
+
+        // Pattern 6: sll=lat,lng format
+        if (lat === 0 || lng === 0) {
+            match = mapLink.match(/[?&]sll=([\d.-]+),([\d.-]+)/);
+            if (match) {
+                lat = parseFloat(match[1]);
+                lng = parseFloat(match[2]);
+            }
+        }
+
+        // Pattern 7: Simple coordinate format (just lat,lng)
+        // Example: 12.950744,100.9835819
+        if (lat === 0 || lng === 0) {
+            match = mapLink.match(/^([\d.-]+),([\d.-]+)$/);
+            if (match) {
+                lat = parseFloat(match[1]);
+                lng = parseFloat(match[2]);
+            }
+        }
+
+        // Pattern 8: DMS format (Degrees, Minutes, Seconds)
+        // Example: 12°57'02.7"N 100°59'00.9"E
         if (lat === 0 || lng === 0) {
             try {
                 const decoded = decodeURIComponent(mapLink);
@@ -193,7 +245,25 @@ const extractCoordinates = (row) => {
                 }
             } catch (e) { }
         }
+
+        // Pattern 9: !8m2!3d{lat}!4d{lng} format (alternate data format)
+        if (lat === 0 || lng === 0) {
+            match = mapLink.match(/!8m2!3d([\d.-]+)!4d([\d.-]+)/);
+            if (match) {
+                lat = parseFloat(match[1]);
+                lng = parseFloat(match[2]);
+            }
+        }
     }
+
+    // Validate coordinates are in Thailand range (roughly)
+    if (lat !== 0 && lng !== 0) {
+        // Thailand bounds: lat 5.5-20.5, lng 97.5-105.5
+        if (lat < 5 || lat > 21 || lng < 97 || lng > 106) {
+            console.warn(`Coordinates outside Thailand: ${lat}, ${lng} - from link: ${mapLink}`);
+        }
+    }
+
     return { lat, lng };
 };
 
