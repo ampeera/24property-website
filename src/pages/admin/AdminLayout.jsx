@@ -16,10 +16,6 @@ import { useAuth } from '../../contexts/AuthContext';
 const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
     { path: '/admin/spreadsheet', icon: Table2, label: 'Spreadsheet' },
-    { path: '/admin/properties', icon: Building2, label: 'Properties' },
-    { path: '/admin/inquiries', icon: MessageSquare, label: 'Inquiries' },
-    { path: '/admin/users', icon: Users, label: 'Users' },
-    { path: '/admin/settings', icon: Settings, label: 'Settings' },
 ];
 
 function AdminLayout() {
