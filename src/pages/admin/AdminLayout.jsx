@@ -38,8 +38,8 @@ function AdminLayout() {
 
     // Redirect if not logged in
     if (!user) {
-        console.log('AdminLayout - No user, redirecting to home');
-        return <Navigate to="/" replace />;
+        console.log('AdminLayout - No user, redirecting to login');
+        return <Navigate to="/admin/login" replace />;
     }
 
     // For now, allow any logged-in user to access admin

@@ -1,6 +1,16 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext({});
+
+// Session storage key
+const SESSION_KEY = 'admin_session';
+const SESSION_EXPIRY_KEY = 'admin_session_expiry';
+
+// Get session duration from env (default 30 days)
+const getSessionDurationMs = () => {
+    const days = parseInt(import.meta.env.VITE_SESSION_DURATION_DAYS) || 30;
+    return days * 24 * 60 * 60 * 1000; // Convert days to milliseconds
+};
 
 export const useAuth = () => {
     const context = useContext(AuthContext);
@@ -11,21 +21,85 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-    // Mock user for "admin" access since we are removing Supabase Auth
-    // In a real read-only scenario, maybe no login is needed, or we just fake it.
-    const [user, setUser] = useState({ id: 'admin', email: 'admin@24property.com' });
-    const [profile, setProfile] = useState({ role: 'ADMIN', name: 'Admin' });
-    const [loading, setLoading] = useState(false);
+    const [user, setUser] = useState(null);
+    const [profile, setProfile] = useState(null);
+    const [loading, setLoading] = useState(true);
 
-    const signUp = async () => ({ error: { message: 'Signup disabled' } });
-    const signIn = async () => ({ data: { user }, error: null });
+    // Check for existing session on mount
+    useEffect(() => {
+        const checkSession = () => {
+            try {
+                const sessionData = localStorage.getItem(SESSION_KEY);
+                const sessionExpiry = localStorage.getItem(SESSION_EXPIRY_KEY);
+
+                if (sessionData && sessionExpiry) {
+                    const expiryTime = parseInt(sessionExpiry);
+                    const now = Date.now();
+
+                    if (now < expiryTime) {
+                        // Session is still valid
+                        const userData = JSON.parse(sessionData);
+                        setUser(userData);
+                        setProfile({ role: 'ADMIN', name: 'Admin' });
+                    } else {
+                        // Session expired, clear it
+                        localStorage.removeItem(SESSION_KEY);
+                        localStorage.removeItem(SESSION_EXPIRY_KEY);
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking session:', error);
+                localStorage.removeItem(SESSION_KEY);
+                localStorage.removeItem(SESSION_EXPIRY_KEY);
+            }
+            setLoading(false);
+        };
+
+        checkSession();
+    }, []);
+
+    const signUp = async () => ({ error: { message: 'Signup disabled for admin panel' } });
+
+    const signIn = async (username, password) => {
+        // Get credentials from environment variables
+        const adminUsername = import.meta.env.VITE_ADMIN_USERNAME;
+        const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD;
+
+        // Validate credentials
+        if (username === adminUsername && password === adminPassword) {
+            const userData = { id: 'admin', email: `${username}@24property.com`, username };
+
+            // Save session to localStorage
+            const expiryTime = Date.now() + getSessionDurationMs();
+            localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
+            localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
+
+            setUser(userData);
+            setProfile({ role: 'ADMIN', name: 'Admin' });
+
+            return { data: { user: userData }, error: null };
+        } else {
+            return {
+                data: null,
+                error: { message: 'ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง' }
+            };
+        }
+    };
+
     const signOut = async () => {
-        // setUser(null); // Optional: if we want to allow logout
+        // Clear session from localStorage
+        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(SESSION_EXPIRY_KEY);
+
+        setUser(null);
+        setProfile(null);
+
         return { error: null };
     };
+
     const updateProfile = async () => ({ error: null });
 
-    const isAdmin = true; // Always admin for now to allow viewing the panel
+    const isAdmin = !!user;
 
     const value = {
         user,

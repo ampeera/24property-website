@@ -8,8 +8,20 @@ const th = {
     login: "เข้าสู่ระบบ",
     zones: {
         A: "โซน A: โป่ง / Tomorrowland",
-        B: "โซน B: จุดพักรถมอเตอร์เวย์",
-        C: "โซน C: นิคมอุตสาหกรรม"
+        B: "โซน B: จุดพักมอเตอร์เวย์ใหม่ / ศรีราชา",
+        C: "โซน C: นิคมอุตสาหกรรม / พนัสนิคม",
+        D: "โซน D: เทศบาลเมือง / ศรีราชา",
+        E: "โซน E: เมืองชลบุรี / บางแสน",
+        F: "โซน F: แหลมฉบัง / อ่าวอุดม",
+        G: "โซน G: พัทยาเหนือ-กลาง-ใต้",
+        H: "โซน H: จอมเทียน / พระตำหนัก",
+        I: "โซน I: นาจอมเทียน / ห้วยใหญ่",
+        J: "โซน J: สัตหีบ / ช่องแสมสาร",
+        K: "โซน K: บ่อวิน / ปลวกแดง",
+        L: "โซน L: บ้านบึง / หนองใหญ่",
+        M: "โซน M: รอยต่อฉะเชิงเทรา / บูรพาวิถี",
+        N: "โซน N: ระยอง / จันทบุรี (EEC)",
+        O: "โซน O: พื้นที่ยุทธศาสตร์พิเศษ / อื่นๆ"
     },
     map: {
         roadmap: "แผนที่",
@@ -48,11 +60,13 @@ const th = {
         type_land: "ที่ดิน",
         type_house: "บ้าน",
         type_condo: "คอนโดมิเนียม",
-        type_factory: "โรงงาน"
+        type_factory: "โรงงาน",
+        share: "แชร์",
+        link_copied: "คัดลอกลิงก์แล้ว!"
     },
     gallery: {
         current: "ปัจจุบัน",
-        future: "AI Future"
+        future: "ภาพอนาคต"
     },
     sales: {
         contact_sales: "ติดต่อทีมขาย",
@@ -86,10 +100,15 @@ const th = {
         title: "วิดีโอรีวิว",
         watch_on_tiktok: "ดูบน TikTok",
         watch_on_facebook: "ดูบน Facebook",
-        watch_video: "ดูวิดีโอ"
+        watch_on_youtube: "ดูบน YouTube",
+        watch_video: "ดูวิดีโอ",
+        open_tiktok: "TikTok",
+        open_facebook: "Facebook",
+        open_youtube: "YouTube"
     },
     zones_dropdown: {
-        all: "ทุก Zone"
+        all: "ทุก Zone",
+        select: "เลือกโซน"
     }
 };
 
@@ -100,8 +119,20 @@ const en = {
     login: "Login",
     zones: {
         A: "Zone A: Pong / Tomorrowland",
-        B: "Zone B: Highway Rest Stop",
-        C: "Zone C: Industrial Estate"
+        B: "Zone B: Highway Rest Stop / Sriracha",
+        C: "Zone C: Industrial Estate / Phanat Nikhom",
+        D: "Zone D: City Municipality / Sriracha",
+        E: "Zone E: Chonburi City / Bangsaen",
+        F: "Zone F: Laem Chabang / Ao Udom",
+        G: "Zone G: Pattaya North-Central-South",
+        H: "Zone H: Jomtien / Pratumnak",
+        I: "Zone I: Na Jomtien / Huay Yai",
+        J: "Zone J: Sattahip / Chong Samae San",
+        K: "Zone K: Bo Win / Pluak Daeng",
+        L: "Zone L: Ban Bueng / Nong Yai",
+        M: "Zone M: Chachoengsao Junction / Burapha Withi",
+        N: "Zone N: Rayong / Chanthaburi (EEC)",
+        O: "Zone O: Special Strategic Area / Other"
     },
     map: {
         roadmap: "Map",
@@ -140,7 +171,9 @@ const en = {
         type_land: "Land",
         type_house: "House",
         type_condo: "Condominium",
-        type_factory: "Factory"
+        type_factory: "Factory",
+        share: "Share",
+        link_copied: "Link copied!"
     },
     gallery: {
         current: "Current",
@@ -178,10 +211,15 @@ const en = {
         title: "Video Review",
         watch_on_tiktok: "Watch on TikTok",
         watch_on_facebook: "Watch on Facebook",
-        watch_video: "Watch Video"
+        watch_on_youtube: "Watch on YouTube",
+        watch_video: "Watch Video",
+        open_tiktok: "TikTok",
+        open_facebook: "Facebook",
+        open_youtube: "YouTube"
     },
     zones_dropdown: {
-        all: "All Zones"
+        all: "All Zones",
+        select: "Select Zone"
     }
 };
 
@@ -191,9 +229,21 @@ const zh = {
     search_placeholder: "寻找 Tomorrowland 附近的别墅用地...",
     login: "登录",
     zones: {
-        A: "A区：Pong / Tomorrowland",
-        B: "B区：高速公路休息站",
-        C: "C区：工业园区"
+        A: "A区：邦 / Tomorrowland",
+        B: "B区：高速公路服务区 / 是拉差",
+        C: "C区：工业园区 / 帕那尼空",
+        D: "D区：市政区 / 是拉差",
+        E: "E区：春武里市 / 邦盛",
+        F: "F区：林查班 / 奥乌东",
+        G: "G区：芭提雅北-中-南",
+        H: "H区：宗滴恩 / 帕塔木纳",
+        I: "I区：那宗滴恩 / 会艾",
+        J: "J区：梭桃邑 / 崇萨姆萨",
+        K: "K区：波温 / 普拉达恩",
+        L: "L区：班邦 / 农艾",
+        M: "M区：差春骚交界 / 东部之路",
+        N: "N区：罗勇 / 尖竹汶 (EEC)",
+        O: "O区：特别战略区 / 其他"
     },
     map: {
         roadmap: "地图",
@@ -232,7 +282,9 @@ const zh = {
         type_land: "土地",
         type_house: "房屋",
         type_condo: "公寓",
-        type_factory: "工厂"
+        type_factory: "工厂",
+        share: "分享",
+        link_copied: "链接已复制!"
     },
     gallery: {
         current: "当前",
@@ -270,10 +322,15 @@ const zh = {
         title: "视频评测",
         watch_on_tiktok: "在TikTok观看",
         watch_on_facebook: "在Facebook观看",
-        watch_video: "观看视频"
+        watch_on_youtube: "在YouTube观看",
+        watch_video: "观看视频",
+        open_tiktok: "TikTok",
+        open_facebook: "Facebook",
+        open_youtube: "YouTube"
     },
     zones_dropdown: {
-        all: "所有区域"
+        all: "所有区域",
+        select: "选择区域"
     }
 };
 

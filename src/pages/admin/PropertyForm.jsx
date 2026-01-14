@@ -16,41 +16,47 @@ import {
 import { initGoogleAuth, isSignedIn, signIn, getCurrentUser } from '../../services/googleAuth';
 import { getSheetData, appendRow, updateRow } from '../../services/googleSheetsService';
 import { uploadImage, compressImage } from '../../services/googleDriveService';
+import zonesData from '../../data/zones.json';
 
-// All columns in exact order matching Google Sheet (A-AM = 39 columns)
+// All columns in exact order matching Google Sheet (42 columns)
 const SHEET_COLUMNS = [
-    // Basic Info (A-H)
+    // Basic Info (A-G)
     { key: 'รหัส', label: 'รหัสทรัพย์สิน', type: 'text', required: true, placeholder: 'เช่น P001', section: 'basic' },
-    { key: 'โซน', label: 'โซน', type: 'select', required: true, options: ['A', 'B', 'C', 'D', 'E'], section: 'basic' },
-    { key: 'ชื่อโซน', label: 'ชื่อโซน', type: 'text', placeholder: 'เช่น พัทยา, ศรีราชา', section: 'basic' },
-    { key: 'ไอคอนโซน', label: 'ไอคอนโซน', type: 'text', placeholder: '📍', section: 'basic' },
+    { key: 'โซน', label: 'โซน', type: 'hidden', section: 'basic' },
+    { key: 'ชื่อโซน', label: 'เลือกโซน', type: 'zone-select', required: true, section: 'basic' },
+    { key: 'ไอคอนโซน', label: 'ไอคอนโซน', type: 'hidden', section: 'basic' },
     { key: 'เกรด', label: 'เกรด', type: 'select', options: ['A', 'B', 'C', 'D'], section: 'basic' },
     { key: 'ประเภท', label: 'ประเภท', type: 'select', required: true, options: ['ที่ดิน', 'บ้าน', 'คอนโด', 'ทาวน์โฮม', 'อาคารพาณิชย์', 'โรงงาน', 'โกดัง'], section: 'basic' },
     { key: 'สถานะ', label: 'สถานะ', type: 'select', required: true, options: ['ขาย', 'เช่า', 'ขายแล้ว', 'จองแล้ว'], section: 'basic' },
+    // Contact Info (H-K) - moved after สถานะ
+    { key: 'ชื่อเจ้าของ', label: 'ชื่อเจ้าของ', type: 'text', placeholder: 'ชื่อผู้ติดต่อ', section: 'contact' },
+    { key: 'เบอร์ติดต่อ', label: 'เบอร์ติดต่อ', type: 'text', placeholder: '08x-xxx-xxxx', section: 'contact' },
+    { key: 'ไอดีไลน์', label: 'Line ID', type: 'text', placeholder: '@line_id', section: 'contact' },
+    { key: 'หมายเหตุ', label: 'หมายเหตุ', type: 'textarea', placeholder: 'บันทึกเพิ่มเติม...', section: 'internal' },
+    // Project Name (L-N)
     { key: 'ชื่อโครงการ', label: 'ชื่อโครงการ', type: 'text', required: true, placeholder: 'ชื่อโครงการหรือที่ตั้ง', section: 'basic' },
-    // Project Name EN/ZH (I-J)
     { key: 'ชื่อโครงการ (EN)', label: 'ชื่อโครงการ (EN)', type: 'text', placeholder: 'Project name in English', section: 'lang' },
     { key: 'ชื่อโครงการ (ZH)', label: 'ชื่อโครงการ (ZH)', type: 'text', placeholder: '中文项目名称', section: 'lang' },
-    // Price & Area (K-N)
+    // Price & Area (O-R)
     { key: 'ราคา', label: 'ราคา (บาท)', type: 'number', required: true, placeholder: '0', section: 'price' },
     { key: 'ไร่', label: 'ไร่', type: 'number', placeholder: '0', section: 'price' },
     { key: 'งาน', label: 'งาน', type: 'number', placeholder: '0', section: 'price' },
     { key: 'ตรว', label: 'ตร.ว.', type: 'number', placeholder: '0', section: 'price' },
-    // Location (O)
+    // Location (S)
     { key: 'พิกัด', label: 'พิกัด (Lat,Lng)', type: 'text', placeholder: '13.18552,100.932901', section: 'location' },
-    // Description (P-R)
+    // Description (T-V)
     { key: 'รายละเอียด', label: 'รายละเอียด', type: 'textarea', placeholder: 'รายละเอียดทรัพย์สิน...', section: 'desc' },
     { key: 'รายละเอียด (EN)', label: 'รายละเอียด (EN)', type: 'textarea', placeholder: 'Description in English...', section: 'lang' },
     { key: 'รายละเอียด (ZH)', label: 'รายละเอียด (ZH)', type: 'textarea', placeholder: '中文描述...', section: 'lang' },
-    // Additional Description (S-U)
+    // Additional Description (W-Y)
     { key: 'รายละเอียด เพิ่มเติม', label: 'รายละเอียดเพิ่มเติม', type: 'textarea', placeholder: 'ข้อมูลเพิ่มเติม...', section: 'desc' },
     { key: 'รายละเอียด เพิ่มเติม (EN)', label: 'รายละเอียดเพิ่มเติม (EN)', type: 'textarea', placeholder: 'Additional details in English...', section: 'lang' },
     { key: 'รายละเอียด เพิ่มเติม (ZH)', label: 'รายละเอียดเพิ่มเติม (ZH)', type: 'textarea', placeholder: '中文补充描述...', section: 'lang' },
-    // Nearby (V-X)
+    // Nearby (Z-AB)
     { key: 'พื้นที่ใกล้เคียง', label: 'พื้นที่ใกล้เคียง', type: 'textarea', placeholder: 'สถานที่ใกล้เคียง, ระยะทาง...', section: 'desc' },
     { key: 'พื้นที่ใกล้เคียง (EN)', label: 'พื้นที่ใกล้เคียง (EN)', type: 'textarea', placeholder: 'Nearby places in English...', section: 'lang' },
     { key: 'พื้นที่ใกล้เคียง (ZH)', label: 'พื้นที่ใกล้เคียง (ZH)', type: 'textarea', placeholder: '中文附近地点...', section: 'lang' },
-    // Images (Y-AH) - 10 columns
+    // Images (AC-AL) - 10 columns
     { key: 'url รูปภาพปก', label: 'รูปปก', type: 'image', section: 'image' },
     { key: 'url รูปภาพจำลอง', label: 'รูปจำลอง', type: 'image', section: 'image' },
     { key: 'url รูปภาพ 2', label: 'รูป 2', type: 'image', section: 'image' },
@@ -61,12 +67,12 @@ const SHEET_COLUMNS = [
     { key: 'url รูปภาพ 7', label: 'รูป 7', type: 'image', section: 'image' },
     { key: 'url รูปภาพ 8', label: 'รูป 8', type: 'image', section: 'image' },
     { key: 'url รูปภาพ 9', label: 'รูป 9', type: 'image', section: 'image' },
-    // Internal & Contact (AI-AM)
-    { key: 'สถานะภายใน', label: 'สถานะภายใน', type: 'text', placeholder: 'run, pending...', section: 'internal' },
-    { key: 'ชื่อเจ้าของ', label: 'ชื่อเจ้าของ', type: 'text', placeholder: 'ชื่อผู้ติดต่อ', section: 'contact' },
-    { key: 'เบอร์ติดต่อ', label: 'เบอร์ติดต่อ', type: 'text', placeholder: '08x-xxx-xxxx', section: 'contact' },
-    { key: 'ไอดีไลน์', label: 'Line ID', type: 'text', placeholder: '@line_id', section: 'contact' },
-    { key: 'หมายเหตุ', label: 'หมายเหตุ', type: 'textarea', placeholder: 'บันทึกเพิ่มเติม...', section: 'internal' },
+    // Video Links (AM-AO) - NEW
+    { key: 'ลิงค์วีดีโอ tiktok', label: 'TikTok', type: 'text', placeholder: 'https://tiktok.com/...', section: 'video' },
+    { key: 'ลิงค์วีดีโอ facebook', label: 'Facebook', type: 'text', placeholder: 'https://facebook.com/...', section: 'video' },
+    { key: 'ลิงค์วีดีโอ youtube', label: 'YouTube', type: 'text', placeholder: 'https://youtube.com/...', section: 'video' },
+    // Internal (AP)
+    { key: 'สถานะ ภายใน', label: 'สถานะภายใน', type: 'text', placeholder: 'run, pending...', section: 'internal' },
 ];
 
 // Image fields for easy access
@@ -148,6 +154,26 @@ function PropertyForm() {
     // Handle form field change
     const handleChange = (key, value) => {
         setFormData(prev => ({ ...prev, [key]: value }));
+    };
+
+    // Handle zone selection - auto-fill zone ID and icon
+    const handleZoneChange = (zoneName) => {
+        const zone = zonesData.find(z => z.name.th === zoneName);
+        if (zone) {
+            setFormData(prev => ({
+                ...prev,
+                'ชื่อโซน': zoneName,
+                'โซน': zone.id,
+                'ไอคอนโซน': zone.icon
+            }));
+        } else {
+            setFormData(prev => ({
+                ...prev,
+                'ชื่อโซน': '',
+                'โซน': '',
+                'ไอคอนโซน': ''
+            }));
+        }
     };
 
     // Handle sign in
@@ -277,8 +303,8 @@ function PropertyForm() {
         setSaving(false);
     };
 
-    // Get fields by section
-    const getFieldsBySection = (section) => SHEET_COLUMNS.filter(c => c.section === section && c.type !== 'image');
+    // Get fields by section (filter out hidden and image types)
+    const getFieldsBySection = (section) => SHEET_COLUMNS.filter(c => c.section === section && c.type !== 'image' && c.type !== 'hidden');
 
     // Not authenticated
     if (!isAuthenticated) {
@@ -357,12 +383,25 @@ function PropertyForm() {
                     <h2 className="text-lg font-semibold mb-4">ข้อมูลพื้นฐาน</h2>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {getFieldsBySection('basic').map(field => (
-                            <div key={field.key}>
+                            <div key={field.key} className={field.type === 'zone-select' ? 'col-span-2' : ''}>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">
                                     {field.label}
                                     {field.required && <span className="text-red-500 ml-1">*</span>}
                                 </label>
-                                {field.type === 'select' ? (
+                                {field.type === 'zone-select' ? (
+                                    <select
+                                        value={formData[field.key] || ''}
+                                        onChange={(e) => handleZoneChange(e.target.value)}
+                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 text-base"
+                                    >
+                                        <option value="">เลือกโซน...</option>
+                                        {zonesData.map(zone => (
+                                            <option key={zone.id} value={zone.name.th}>
+                                                {zone.icon} {zone.id} - {zone.name.th}
+                                            </option>
+                                        ))}
+                                    </select>
+                                ) : field.type === 'select' ? (
                                     <select
                                         value={formData[field.key] || ''}
                                         onChange={(e) => handleChange(field.key, e.target.value)}
@@ -374,6 +413,66 @@ function PropertyForm() {
                                 ) : (
                                     <input
                                         type={field.type}
+                                        value={formData[field.key] || ''}
+                                        onChange={(e) => handleChange(field.key, e.target.value)}
+                                        placeholder={field.placeholder}
+                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                )}
+                            </div>
+                        ))}
+                    </div>
+                    {/* Show auto-filled zone info */}
+                    {formData['โซน'] && (
+                        <div className="mt-4 p-3 bg-blue-50 rounded-lg flex items-center gap-3">
+                            <span className="text-2xl">{formData['ไอคอนโซน']}</span>
+                            <div>
+                                <span className="text-sm text-gray-500">โซน:</span>
+                                <span className="ml-2 font-semibold text-blue-700">{formData['โซน']}</span>
+                                <span className="mx-2 text-gray-400">|</span>
+                                <span className="text-gray-700">{formData['ชื่อโซน']}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* Contact Info - moved up */}
+                <div className="bg-white rounded-2xl shadow-sm border p-6">
+                    <h2 className="text-lg font-semibold mb-4">📞 ข้อมูลติดต่อ</h2>
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        {getFieldsBySection('contact').map(field => (
+                            <div key={field.key}>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                                <input
+                                    type="text"
+                                    value={formData[field.key] || ''}
+                                    onChange={(e) => handleChange(field.key, e.target.value)}
+                                    placeholder={field.placeholder}
+                                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+
+                {/* Internal Notes - moved up */}
+                <div className="bg-white rounded-2xl shadow-sm border p-6">
+                    <h2 className="text-lg font-semibold mb-4">📝 หมายเหตุภายใน</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {getFieldsBySection('internal').map(field => (
+                            <div key={field.key}>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
+                                {field.type === 'textarea' ? (
+                                    <textarea
+                                        value={formData[field.key] || ''}
+                                        onChange={(e) => handleChange(field.key, e.target.value)}
+                                        placeholder={field.placeholder}
+                                        rows={2}
+                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                                    />
+                                ) : (
+                                    <input
+                                        type="text"
                                         value={formData[field.key] || ''}
                                         onChange={(e) => handleChange(field.key, e.target.value)}
                                         placeholder={field.placeholder}
@@ -518,11 +617,11 @@ function PropertyForm() {
                     </div>
                 </div>
 
-                {/* Contact Info */}
+                {/* Video Links */}
                 <div className="bg-white rounded-2xl shadow-sm border p-6">
-                    <h2 className="text-lg font-semibold mb-4">ข้อมูลติดต่อ</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {getFieldsBySection('contact').map(field => (
+                    <h2 className="text-lg font-semibold mb-4">🎬 ลิงค์วีดีโอ</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {getFieldsBySection('video').map(field => (
                             <div key={field.key}>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
                                 <input
@@ -532,35 +631,6 @@ function PropertyForm() {
                                     placeholder={field.placeholder}
                                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                                 />
-                            </div>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Internal Notes */}
-                <div className="bg-white rounded-2xl shadow-sm border p-6">
-                    <h2 className="text-lg font-semibold mb-4">หมายเหตุภายใน</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {getFieldsBySection('internal').map(field => (
-                            <div key={field.key}>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">{field.label}</label>
-                                {field.type === 'textarea' ? (
-                                    <textarea
-                                        value={formData[field.key] || ''}
-                                        onChange={(e) => handleChange(field.key, e.target.value)}
-                                        placeholder={field.placeholder}
-                                        rows={3}
-                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    />
-                                ) : (
-                                    <input
-                                        type="text"
-                                        value={formData[field.key] || ''}
-                                        onChange={(e) => handleChange(field.key, e.target.value)}
-                                        placeholder={field.placeholder}
-                                        className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
-                                    />
-                                )}
                             </div>
                         ))}
                     </div>

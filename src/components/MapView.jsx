@@ -181,12 +181,12 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
                 }
             </GoogleMap>
 
-            {/* Map Controls */}
-            <div className="absolute bottom-24 right-4 flex flex-col gap-2 z-10">
+            {/* Map Controls - adjusted spacing to avoid overlap */}
+            <div className="absolute bottom-32 sm:bottom-24 right-2 sm:right-4 flex flex-col gap-1.5 sm:gap-2 z-10">
                 {/* Map Type Toggle */}
                 <button
                     onClick={toggleMapType}
-                    className="bg-white p-3 rounded-lg shadow-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
+                    className="bg-white p-2 sm:p-3 rounded-lg shadow-lg hover:bg-gray-50 transition-colors flex items-center gap-2"
                     title={t('map.change_type')}
                 >
                     <Layers size={20} className="text-gray-700" />
@@ -195,11 +195,10 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
                     </span>
                 </button>
 
-                {/* My Location Button */}
                 <button
                     onClick={handleGetLocation}
                     disabled={locatingUser}
-                    className="bg-white p-3 rounded-lg shadow-lg hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
+                    className="bg-white p-2 sm:p-3 rounded-lg shadow-lg hover:bg-gray-50 transition-colors flex items-center gap-2 disabled:opacity-50"
                     title={t('map.my_location')}
                 >
                     {locatingUser ? (

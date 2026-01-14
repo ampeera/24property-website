@@ -358,9 +358,14 @@ export const transformToProperty = (row) => {
         position: { lat, lng },
         mapLink: mapLink,
         currentImage: coverImage,
-        mockupImage: mockupImage,
+        futureImage: mockupImage,  // AI render/mockup image for future view
+        mockupImage: mockupImage,  // Keep for backwards compatibility
         images: images,
         videoUrl: row['Video Link'] || row['วิดีโอ'] || '',
+        // Video platform links
+        videoTiktok: row['ลิงค์วีดีโอ tiktok'] || '',
+        videoFacebook: row['ลิงค์วีดีโอ facebook'] || '',
+        videoYoutube: row['ลิงค์วีดีโอ youtube'] || '',
         province: row['จังหวัด'] || 'Chonburi'
     };
 };

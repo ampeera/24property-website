@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import SalesContact from './SalesContact';
 import ImageGallery from './ImageGallery';
 import VideoEmbed from './VideoEmbed';
+import VideoLinkButtons from './VideoLinkButtons';
 
 function PropertyDetail({ property, onClose, onFutureView }) {
     const { t, i18n } = useTranslation();
@@ -109,7 +110,8 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                             </div>
                         </div>
 
-                        <div className="pt-4 border-t border-gray-200">
+                        {/* Type and Location - Side by Side */}
+                        <div className="pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
                             <div className="flex items-start gap-3">
                                 <Users size={16} className="text-gray-400 mt-1" />
                                 <div>
@@ -117,9 +119,7 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                                     <p className="text-xs text-gray-500">{t('property.grade')}: {property.grade || '-'}</p>
                                 </div>
                             </div>
-                        </div>
-                        {property.mapLink && (
-                            <div className="pt-2">
+                            {property.mapLink && (
                                 <div className="flex items-start gap-3">
                                     <DollarSign size={16} className="text-gray-400 mt-1" />
                                     <div>
@@ -128,14 +128,18 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                                             href={property.mapLink}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="text-xs text-blue-600 hover:underline"
+                                            className="text-xs text-blue-600 hover:underline flex items-center gap-1"
                                         >
                                             {t('property.view_on_google_maps')}
+                                            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
+                                                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
+                                                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
+                                            </svg>
                                         </a>
                                     </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
 
                     {/* รายละเอียดเพิ่มเติม Section */}
@@ -199,15 +203,69 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                     )}
 
                     {/* Action Buttons */}
-                    <div className="space-y-4 pt-4">
-                        <button
-                            onClick={onFutureView}
-                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-2"
-                        >
-                            ✨ {t('property.see_future_view')}
-                        </button>
+                    <div className="space-y-3 pt-4">
+                        {/* Row 1: AI Future View + Share Button */}
+                        <div className="grid grid-cols-2 gap-2">
+                            {/* AI Future View Button - Gradient */}
+                            {property.futureImage ? (
+                                <a
+                                    href={property.futureImage}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="py-3 px-3 rounded-xl font-bold text-sm text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5"
+                                    style={{
+                                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #4facfe 100%)',
+                                        backgroundSize: '200% 200%',
+                                        animation: 'gradient-shift 3s ease infinite'
+                                    }}
+                                >
+                                    <span>✨</span>
+                                    <span>{t('property.see_future_view')}</span>
+                                </a>
+                            ) : (
+                                <div className="py-3 px-3 rounded-xl font-bold text-sm bg-gray-200 text-gray-400 flex items-center justify-center gap-1.5 cursor-not-allowed">
+                                    <span>✨</span>
+                                    <span>{t('property.see_future_view')}</span>
+                                </div>
+                            )}
 
-                        {/* Video Review Section */}
+                            {/* Share Button */}
+                            <button
+                                onClick={() => {
+                                    // Generate property-specific share URL
+                                    const shareUrl = `${window.location.origin}${window.location.pathname}?property=${property.id}`;
+                                    const shareData = {
+                                        title: typeof property.title === 'object' ? (property.title[i18n.language] || property.title['th']) : property.title,
+                                        text: `${typeof property.title === 'object' ? (property.title[i18n.language] || property.title['th']) : property.title} - ${property.price.toLocaleString()} ${t('property.currency')}`,
+                                        url: shareUrl
+                                    };
+                                    if (navigator.share) {
+                                        navigator.share(shareData);
+                                    } else {
+                                        navigator.clipboard.writeText(shareUrl);
+                                        alert(t('property.link_copied') || 'Link copied!');
+                                    }
+                                }}
+                                className="py-3 px-3 rounded-xl font-bold text-sm text-white shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all flex items-center justify-center gap-1.5"
+                                style={{
+                                    background: 'linear-gradient(135deg, #11998e 0%, #38ef7d 100%)'
+                                }}
+                            >
+                                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M4 12v8a2 2 0 002 2h12a2 2 0 002-2v-8M16 6l-4-4-4 4M12 2v13" />
+                                </svg>
+                                <span>{t('property.share')}</span>
+                            </button>
+                        </div>
+
+                        {/* Row 2: Social Media Link Buttons - TikTok, Facebook, YouTube */}
+                        <VideoLinkButtons
+                            tiktokUrl={property.videoTiktok}
+                            facebookUrl={property.videoFacebook}
+                            youtubeUrl={property.videoYoutube}
+                        />
+
+                        {/* Legacy Video Review Section (single video URL) */}
                         {property.videoUrl && (
                             <VideoEmbed videoUrl={property.videoUrl} compact />
                         )}

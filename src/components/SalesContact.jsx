@@ -5,16 +5,16 @@ import { useTranslation } from 'react-i18next';
 // Sales team contact info
 const SALES_TEAM = [
     {
-        name: 'K.Love',
-        phone: '0892442468',
-        lineId: '66892442468',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Love&backgroundColor=b6e3f4'
+        name: 'คุณศิ 24Property',
+        phone: '0930976723',
+        lineId: 'si24property',
+        avatar: '/images/sales/si.png'
     },
     {
-        name: 'K.Nut',
-        phone: '0818652200',
-        lineId: 'ampeera',
-        avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Nut&backgroundColor=c0aede'
+        name: 'คุณนัท 24Property',
+        phone: '0930975722',
+        lineId: 'nut24property',
+        avatar: '/images/sales/nut.png'
     }
 ];
 
@@ -38,7 +38,7 @@ function SalesContact({ compact = false }) {
                     <div key={sales.name} className="flex gap-1">
                         <a
                             href={`tel:${formatPhoneForTel(sales.phone)}`}
-                            className="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+                            className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                             title={`${t('sales.call')} ${sales.name}`}
                         >
                             <Phone size={18} />
@@ -84,7 +84,7 @@ function SalesContact({ compact = false }) {
                         <div className="flex gap-2 w-full">
                             <a
                                 href={`tel:${formatPhoneForTel(sales.phone)}`}
-                                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors text-sm font-medium"
+                                className="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm font-medium"
                             >
                                 <Phone size={14} />
                                 {t('sales.call')}

@@ -6,6 +6,7 @@ import './i18n'
 import App from './App.jsx'
 import { AuthProvider } from './contexts/AuthContext'
 import AdminLayout from './pages/admin/AdminLayout'
+import AdminLogin from './pages/admin/AdminLogin'
 import Dashboard from './pages/admin/Dashboard'
 import PropertyList from './pages/admin/PropertyList'
 import PropertyForm from './pages/admin/PropertyForm'
@@ -19,6 +20,9 @@ createRoot(document.getElementById('root')).render(
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<App />} />
+
+          {/* Admin Login */}
+          <Route path="/admin/login" element={<AdminLogin />} />
 
           {/* Admin Routes */}
           <Route path="/admin" element={<AdminLayout />}>
