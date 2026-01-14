@@ -184,36 +184,38 @@ function App() {
             />
           </div>
 
-          {/* Language Switcher */}
-          <div className="pointer-events-auto relative flex-shrink-0">
-            <button
-              onClick={() => setIsLangOpen(!isLangOpen)}
-              className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/90 backdrop-blur-md rounded-full hover:bg-white transition-all shadow-sm border border-gray-200"
-            >
-              <span className="text-base sm:text-lg">{currentLang.flag}</span>
-              <span className="font-medium hidden md:block text-sm">{currentLang.name}</span>
-              <ChevronDown size={14} className={`text-gray-400 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
-            </button>
+          {/* Language Switcher - Hide when PropertyDetail is open (to avoid duplicate buttons) */}
+          {!selectedProperty && (
+            <div className="pointer-events-auto relative flex-shrink-0">
+              <button
+                onClick={() => setIsLangOpen(!isLangOpen)}
+                className="flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 bg-white/90 backdrop-blur-md rounded-full hover:bg-white transition-all shadow-sm border border-gray-200"
+              >
+                <span className="text-base sm:text-lg">{currentLang.flag}</span>
+                <span className="font-medium hidden md:block text-sm">{currentLang.name}</span>
+                <ChevronDown size={14} className={`text-gray-400 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+              </button>
 
-            {isLangOpen && (
-              <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 z-50">
-                <div className="max-h-[60vh] overflow-y-auto">
-                  {languages.map((lang) => (
-                    <button
-                      key={lang.code}
-                      onClick={() => changeLanguage(lang.code)}
-                      className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors"
-                    >
-                      <span className="text-xl">{lang.flag}</span>
-                      <span className={`flex-1 text-sm ${i18n.language === lang.code ? 'font-bold text-blue-600' : 'text-gray-700'}`}>
-                        {lang.name}
-                      </span>
-                    </button>
-                  ))}
+              {isLangOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden animate-in fade-in slide-in-from-top-2 z-50">
+                  <div className="max-h-[60vh] overflow-y-auto">
+                    {languages.map((lang) => (
+                      <button
+                        key={lang.code}
+                        onClick={() => changeLanguage(lang.code)}
+                        className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                      >
+                        <span className="text-xl">{lang.flag}</span>
+                        <span className={`flex-1 text-sm ${i18n.language === lang.code ? 'font-bold text-blue-600' : 'text-gray-700'}`}>
+                          {lang.name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
         </div>
 

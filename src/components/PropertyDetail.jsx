@@ -1,7 +1,8 @@
-import React from 'react';
-import { X, TrendingUp, Users, DollarSign, ArrowRight, AlertCircle } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, TrendingUp, Users, DollarSign, ArrowRight, AlertCircle, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
+import { SUPPORTED_LANGUAGES } from '../i18n';
 import SalesContact from './SalesContact';
 import ImageGallery from './ImageGallery';
 import VideoEmbed from './VideoEmbed';
@@ -9,6 +10,16 @@ import VideoLinkButtons from './VideoLinkButtons';
 
 function PropertyDetail({ property, onClose, onFutureView }) {
     const { t, i18n } = useTranslation();
+    const [isLangOpen, setIsLangOpen] = useState(false);
+
+    const languages = SUPPORTED_LANGUAGES;
+    const currentLang = languages.find(l => l.code === i18n.language) || languages[0];
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+        setIsLangOpen(false);
+    };
+
     if (!property) return null;
 
     // Helper function to get translated status
@@ -46,6 +57,15 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                 initial={{ x: '100%' }}
                 animate={{ x: 0 }}
                 exit={{ x: '100%' }}
+                drag="x"
+                dragConstraints={{ left: 0, right: 0 }}
+                dragElastic={{ left: 0, right: 0.3 }}
+                onDragEnd={(event, info) => {
+                    // Close if dragged right more than 100px or with high velocity
+                    if (info.offset.x > 100 || info.velocity.x > 500) {
+                        onClose();
+                    }
+                }}
                 transition={{ type: 'spring', damping: 25, stiffness: 200 }}
                 className="absolute top-0 right-0 h-full w-full md:w-[450px] bg-white shadow-2xl z-50 overflow-y-auto border-l border-gray-100"
             >
@@ -56,12 +76,34 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                         currentImage={property.currentImage}
                         futureImage={property.futureImage}
                     />
-                    <button
-                        onClick={onClose}
-                        className="absolute top-4 right-4 bg-white/90 p-2 rounded-full hover:bg-white transition-colors z-10"
-                    >
-                        <X size={20} />
-                    </button>
+
+                    {/* Language Switcher - top right, replacing X button */}
+                    <div className="absolute top-4 right-4 z-10">
+                        <button
+                            onClick={() => setIsLangOpen(!isLangOpen)}
+                            className="flex items-center gap-1.5 px-2.5 py-2 bg-white/90 backdrop-blur-sm rounded-full hover:bg-white transition-all shadow-sm border border-white/20"
+                        >
+                            <span className="text-base">{currentLang.flag}</span>
+                            <Globe size={14} className="text-gray-600" />
+                        </button>
+
+                        {isLangOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-40 bg-white rounded-xl shadow-xl border border-gray-100 py-1.5 overflow-hidden z-50">
+                                {languages.map((lang) => (
+                                    <button
+                                        key={lang.code}
+                                        onClick={() => changeLanguage(lang.code)}
+                                        className="w-full text-left px-3 py-2 hover:bg-gray-50 flex items-center gap-2.5 transition-colors"
+                                    >
+                                        <span className="text-lg">{lang.flag}</span>
+                                        <span className={`flex-1 text-sm ${i18n.language === lang.code ? 'font-bold text-blue-600' : 'text-gray-700'}`}>
+                                            {lang.name}
+                                        </span>
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
                 </div>
 
                 <div className="p-6 space-y-6">

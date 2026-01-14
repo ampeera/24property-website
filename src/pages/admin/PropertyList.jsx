@@ -1,11 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { ExternalLink, Eye, Search, Table } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
+import { ExternalLink, Eye, Search, Table, ChevronDown } from 'lucide-react';
 import { PropertyService } from '../../services/PropertyService';
+import { SUPPORTED_LANGUAGES } from '../../i18n';
 
 function PropertyList() {
+    const { t, i18n } = useTranslation();
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isLangOpen, setIsLangOpen] = useState(false);
+
+    const languages = SUPPORTED_LANGUAGES;
+    const currentLang = languages.find(l => l.code === i18n.language) || languages[0];
+
+    const changeLanguage = (lng) => {
+        i18n.changeLanguage(lng);
+        setIsLangOpen(false);
+    };
 
     useEffect(() => {
         loadProperties();
@@ -63,20 +75,53 @@ function PropertyList() {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                     <h1 className="text-2xl font-bold text-gray-900">Properties</h1>
                     <p className="text-gray-500">{properties.length} total properties</p>
                 </div>
-                <a
-                    href="https://docs.google.com/spreadsheets/d/1Js3Lsphz2VzofszRq1ghLXB4d2INBmiDIWHtXdgKvRk/edit?gid=681312581#gid=681312581"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
-                >
-                    <Table size={20} />
-                    Manage in Google Sheets
-                </a>
+                <div className="flex items-center gap-3">
+                    {/* Language Switcher */}
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsLangOpen(!isLangOpen)}
+                            className="flex items-center gap-2 px-3 py-2 bg-white rounded-lg hover:bg-gray-50 transition-all shadow-sm border border-gray-200"
+                        >
+                            <span className="text-lg">{currentLang.flag}</span>
+                            <span className="font-medium text-sm hidden sm:block">{currentLang.name}</span>
+                            <ChevronDown size={14} className={`text-gray-400 transition-transform ${isLangOpen ? 'rotate-180' : ''}`} />
+                        </button>
+
+                        {isLangOpen && (
+                            <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 py-2 overflow-hidden z-50">
+                                <div className="max-h-[60vh] overflow-y-auto">
+                                    {languages.map((lang) => (
+                                        <button
+                                            key={lang.code}
+                                            onClick={() => changeLanguage(lang.code)}
+                                            className="w-full text-left px-4 py-3 hover:bg-gray-50 flex items-center gap-3 transition-colors"
+                                        >
+                                            <span className="text-xl">{lang.flag}</span>
+                                            <span className={`flex-1 text-sm ${i18n.language === lang.code ? 'font-bold text-blue-600' : 'text-gray-700'}`}>
+                                                {lang.name}
+                                            </span>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    <a
+                        href="https://docs.google.com/spreadsheets/d/1Js3Lsphz2VzofszRq1ghLXB4d2INBmiDIWHtXdgKvRk/edit?gid=681312581#gid=681312581"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                    >
+                        <Table size={20} />
+                        Manage in Google Sheets
+                    </a>
+                </div>
             </div>
 
             {/* Search */}
