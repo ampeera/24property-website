@@ -108,8 +108,16 @@ function PropertyDetail({ property, onClose, onFutureView }) {
 
                 <div className="p-6 space-y-6">
                     {/* Header Info */}
-                    <div>
-                        <div className="flex items-center gap-2 mb-2">
+                    <div className="relative">
+                        {/* Close Button - X */}
+                        <button
+                            onClick={onClose}
+                            className="absolute -top-2 -right-2 w-8 h-8 bg-white border border-gray-200 rounded-full shadow-md flex items-center justify-center hover:bg-gray-50 hover:border-gray-300 transition-all z-10"
+                            aria-label="Close"
+                        >
+                            <X size={18} className="text-gray-500" />
+                        </button>
+                        <div className="flex items-center gap-2 mb-2 pr-8">
                             <span className={`px-2 py-0.5 rounded text-xs font-bold ${property.type === 'OWNER' ? 'bg-yellow-100 text-yellow-800 border border-yellow-200' :
                                 property.type === 'HOT' ? 'bg-red-100 text-red-800' :
                                     'bg-blue-100 text-blue-800'
