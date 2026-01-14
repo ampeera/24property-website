@@ -5,13 +5,13 @@ import { useTranslation } from 'react-i18next';
 // Sales team contact info
 const SALES_TEAM = [
     {
-        name: 'คุณศิ 24Property',
+        nameKey: 'sales.si_name',
         phone: '0930976723',
         lineId: 'si24property',
         avatar: '/images/sales/si.png'
     },
     {
-        name: 'คุณนัท 24Property',
+        nameKey: 'sales.nut_name',
         phone: '0930975722',
         lineId: 'nut24property',
         avatar: '/images/sales/nut.png'
@@ -35,11 +35,11 @@ function SalesContact({ compact = false }) {
         return (
             <div className="flex gap-2">
                 {SALES_TEAM.map((sales) => (
-                    <div key={sales.name} className="flex gap-1">
+                    <div key={sales.nameKey} className="flex gap-1">
                         <a
                             href={`tel:${formatPhoneForTel(sales.phone)}`}
                             className="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
-                            title={`${t('sales.call')} ${sales.name}`}
+                            title={`${t('sales.call')} ${t(sales.nameKey)}`}
                         >
                             <Phone size={18} />
                         </a>
@@ -48,7 +48,7 @@ function SalesContact({ compact = false }) {
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 bg-[#00B900] text-white rounded-lg hover:bg-[#009900] transition-colors"
-                            title={`LINE ${sales.name}`}
+                            title={`LINE ${t(sales.nameKey)}`}
                         >
                             <MessageCircle size={18} />
                         </a>
@@ -67,18 +67,18 @@ function SalesContact({ compact = false }) {
             <div className="grid grid-cols-2 gap-3">
                 {SALES_TEAM.map((sales) => (
                     <div
-                        key={sales.name}
+                        key={sales.nameKey}
                         className="bg-gray-50 rounded-xl p-4 flex flex-col items-center gap-3 border border-gray-100"
                     >
                         {/* Avatar */}
                         <img
                             src={sales.avatar}
-                            alt={sales.name}
+                            alt={t(sales.nameKey)}
                             className="w-14 h-14 rounded-full bg-white border-2 border-gray-200"
                         />
 
                         {/* Name */}
-                        <span className="font-semibold text-gray-900">{sales.name}</span>
+                        <span className="font-semibold text-gray-900">{t(sales.nameKey)}</span>
 
                         {/* Buttons */}
                         <div className="flex gap-2 w-full">

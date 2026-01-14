@@ -70,7 +70,9 @@ const th = {
     },
     sales: {
         contact_sales: "ติดต่อทีมขาย",
-        call: "โทร"
+        call: "โทร",
+        si_name: "คุณศิ 24Property",
+        nut_name: "คุณนัท 24Property"
     },
     inquiry: {
         contact_owner: "ติดต่อเจ้าของ",
@@ -181,7 +183,9 @@ const en = {
     },
     sales: {
         contact_sales: "Contact Sales Team",
-        call: "Call"
+        call: "Call",
+        si_name: "K.Si 24Property",
+        nut_name: "K.Nut 24Property"
     },
     inquiry: {
         contact_owner: "Contact Owner",
@@ -292,7 +296,9 @@ const zh = {
     },
     sales: {
         contact_sales: "联系销售团队",
-        call: "电话"
+        call: "电话",
+        si_name: "小姐Si 24Property",
+        nut_name: "小姐Nut 24Property"
     },
     inquiry: {
         contact_owner: "联系业主",
