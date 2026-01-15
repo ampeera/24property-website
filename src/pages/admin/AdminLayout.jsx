@@ -10,7 +10,8 @@ import {
     Menu,
     X,
     Table2,
-    PlusCircle
+    PlusCircle,
+    Camera
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
@@ -18,6 +19,7 @@ const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'แดชบอร์ด', end: true },
     { path: '/admin/properties/new', icon: PlusCircle, label: 'เพิ่มทรัพย์ลงเว็บไซต์' },
     { path: '/admin/spreadsheet', icon: Table2, label: 'รายการทรัพย์ในเว็บไซต์' },
+    { path: '/admin/scout', icon: Camera, label: 'ค้นหาทรัพย์ใหม่' },
 ];
 
 function AdminLayout() {
