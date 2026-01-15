@@ -15,9 +15,9 @@ import {
 import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
-    { path: '/admin', icon: LayoutDashboard, label: 'Dashboard', end: true },
-    { path: '/admin/spreadsheet', icon: Table2, label: 'Spreadsheet' },
-    { path: '/admin/properties/new', icon: PlusCircle, label: 'เพิ่มรายการ' },
+    { path: '/admin', icon: LayoutDashboard, label: 'แดชบอร์ด', end: true },
+    { path: '/admin/properties/new', icon: PlusCircle, label: 'เพิ่มทรัพย์ลงเว็บไซต์' },
+    { path: '/admin/spreadsheet', icon: Table2, label: 'รายการทรัพย์ในเว็บไซต์' },
 ];
 
 function AdminLayout() {

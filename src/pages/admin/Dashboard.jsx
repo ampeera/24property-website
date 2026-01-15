@@ -66,8 +66,8 @@ function Dashboard() {
         <div className="space-y-6">
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-                    <p className="text-gray-500">Welcome to 24Property Admin Panel</p>
+                    <h1 className="text-2xl font-bold text-gray-900">แดชบอร์ด</h1>
+                    <p className="text-gray-500">ยินดีต้อนรับสู่ระบบจัดการ 24Property</p>
                 </div>
                 <a
                     href="https://docs.google.com/spreadsheets/d/1Js3Lsphz2VzofszRq1ghLXB4d2INBmiDIWHtXdgKvRk/edit?gid=681312581#gid=681312581"
@@ -76,7 +76,7 @@ function Dashboard() {
                     className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                     <Table size={20} />
-                    Manage Data in Sheets
+                    จัดการข้อมูลใน Google Sheets
                 </a>
             </div>
 
@@ -84,21 +84,21 @@ function Dashboard() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <StatCard
                     icon={Building2}
-                    label="Total Properties"
+                    label="จำนวนทรัพย์ทั้งหมด"
                     value={stats.properties}
                     color="border-blue-500"
                     link="/admin/properties"
                 />
                 <StatCard
                     icon={MessageSquare}
-                    label="Inquiries"
+                    label="การติดต่อ"
                     value={stats.inquiries}
                     color="border-green-500"
                     link="/admin/inquiries"
                 />
                 <StatCard
                     icon={Users}
-                    label="Users"
+                    label="ผู้ใช้งาน"
                     value={stats.users}
                     color="border-purple-500"
                     link="/admin/users"
@@ -107,10 +107,10 @@ function Dashboard() {
 
             {/* Hint */}
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
-                <h3 className="text-blue-900 font-semibold mb-2">Note on Data Management</h3>
+                <h3 className="text-blue-900 font-semibold mb-2">หมายเหตุการจัดการข้อมูล</h3>
                 <p className="text-blue-700 text-sm">
-                    This admin panel is now in <strong>Read-Only Mode</strong>. All property data is managed directly via Google Sheets.
-                    Click "Manage Data in Sheets" to make changes.
+                    ระบบจัดการนี้อยู่ในโหมด<strong>อ่านอย่างเดียว</strong> ข้อมูลทรัพย์ทั้งหมดจัดการผ่าน Google Sheets โดยตรง
+                    คลิก "จัดการข้อมูลใน Google Sheets" เพื่อแก้ไขข้อมูล
                 </p>
             </div>
         </div>
