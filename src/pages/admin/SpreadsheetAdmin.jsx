@@ -402,45 +402,15 @@ function SpreadsheetAdmin() {
             <div className="bg-white border-b border-gray-200 px-4 py-2 flex items-center justify-between sticky top-0 z-40 shrink-0">
                 <div className="flex items-center gap-4">
                     <h1 className="text-lg font-semibold text-gray-900">
-                        📊 Spreadsheet Admin
+                        📊 รายการทรัพย์ในเว็บไซต์
                     </h1>
                     <span className="text-sm text-gray-500">
-                        {data.length} rows
+                        {data.length} รายการ
                     </span>
                     {pendingChanges.size > 0 && (
                         <span className="text-xs text-orange-600 bg-orange-100 px-2 py-0.5 rounded">
-                            {pendingChanges.size} unsaved changes
+                            {pendingChanges.size} รอบันทึก
                         </span>
-                    )}
-                </div>
-
-                {/* Auth Controls */}
-                <div className="flex items-center gap-2">
-                    {/* Check both user state and direct auth service state */}
-                    {user || getCurrentUser() ? (
-                        <div className="flex items-center gap-2">
-                            <img
-                                src={user?.picture || getCurrentUser()?.picture}
-                                alt=""
-                                className="w-7 h-7 rounded-full"
-                            />
-                            <span className="text-sm text-gray-600">{user?.name || getCurrentUser()?.name}</span>
-                            <button
-                                onClick={handleSignOut}
-                                className="text-gray-400 hover:text-gray-600 p-1"
-                                title="Sign Out"
-                            >
-                                <LogOut size={16} />
-                            </button>
-                        </div>
-                    ) : (
-                        <button
-                            onClick={handleSignIn}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-3 py-1.5 rounded-lg text-sm hover:bg-blue-700 transition-colors"
-                        >
-                            <LogIn size={16} />
-                            Sign in with Google
-                        </button>
                     )}
                 </div>
             </div>
@@ -517,16 +487,6 @@ function SpreadsheetAdmin() {
                     <Download size={16} />
                     Export
                 </button>
-
-                <a
-                    href={`https://docs.google.com/spreadsheets/d/${import.meta.env.VITE_GOOGLE_SHEETS_ID}/edit#gid=681312581`}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="flex items-center gap-1 px-3 py-1.5 bg-green-100 text-green-700 rounded text-sm hover:bg-green-200"
-                >
-                    <ExternalLink size={16} />
-                    Open Sheet
-                </a>
             </div>
 
             {/* Error Banner */}
