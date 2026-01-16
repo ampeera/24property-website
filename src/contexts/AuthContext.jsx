@@ -1,11 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { 
-    initGoogleAuth, 
-    signIn as googleSignIn, 
-    signOut as googleSignOut, 
-    getCurrentUser, 
+import {
+    initGoogleAuth,
+    signIn as googleSignIn,
+    signOut as googleSignOut,
+    getCurrentUser,
     getAccessToken,
-    onAuthChange 
+    onAuthChange
 } from '../services/googleAuth';
 
 const AuthContext = createContext({});
@@ -97,10 +97,14 @@ export const AuthProvider = ({ children }) => {
     // Sign in with Google
     const signIn = async () => {
         try {
+            console.log('[Auth] Starting Google Sign-In...');
+
             // Trigger Google Sign-In
             const result = await googleSignIn();
-            
+            console.log('[Auth] Google Sign-In result:', result);
+
             if (!result || !result.user) {
+                console.error('[Auth] No user in result');
                 return {
                     data: null,
                     error: { message: 'ไม่สามารถเข้าสู่ระบบ Google ได้' }
@@ -109,10 +113,14 @@ export const AuthProvider = ({ children }) => {
 
             const googleUser = result.user;
             const userEmail = googleUser.email?.toLowerCase();
+            console.log('[Auth] User email:', userEmail);
 
             // Check if email is in allowed list
             const allowedEmails = getAllowedEmails();
+            console.log('[Auth] Allowed emails:', allowedEmails);
+
             if (allowedEmails.length > 0 && !allowedEmails.includes(userEmail)) {
+                console.error('[Auth] Email not in whitelist');
                 // Sign out from Google since not authorized
                 await googleSignOut();
                 return {
@@ -128,6 +136,7 @@ export const AuthProvider = ({ children }) => {
                 name: googleUser.name,
                 picture: googleUser.picture
             };
+            console.log('[Auth] Login successful:', userData.email);
 
             // Save session to localStorage
             const expiryTime = Date.now() + getSessionDurationMs();
@@ -139,7 +148,7 @@ export const AuthProvider = ({ children }) => {
 
             return { data: { user: userData }, error: null };
         } catch (error) {
-            console.error('Sign in error:', error);
+            console.error('[Auth] Sign in error:', error);
             return {
                 data: null,
                 error: { message: error.message || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ' }
