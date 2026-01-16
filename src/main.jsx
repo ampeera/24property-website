@@ -13,6 +13,7 @@ import PropertyForm from './pages/admin/PropertyForm'
 import InquiryList from './pages/admin/InquiryList'
 import SpreadsheetAdmin from './pages/admin/SpreadsheetAdmin'
 import PropertyScout from './pages/admin/PropertyScout'
+import ScoutList from './pages/admin/ScoutList'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
@@ -35,6 +36,7 @@ createRoot(document.getElementById('root')).render(
             <Route path="inquiries" element={<InquiryList />} />
             <Route path="spreadsheet" element={<SpreadsheetAdmin />} />
             <Route path="scout" element={<PropertyScout />} />
+            <Route path="scout-list" element={<ScoutList />} />
           </Route>
 
           {/* Fallback route */}

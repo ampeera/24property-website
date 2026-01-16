@@ -11,15 +11,17 @@ import {
     X,
     Table2,
     PlusCircle,
-    Camera
+    Camera,
+    List
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 
 const navItems = [
     { path: '/admin', icon: LayoutDashboard, label: 'แดชบอร์ด', end: true },
+    { path: '/admin/scout', icon: Camera, label: 'ค้นหาทรัพย์ใหม่' },
+    { path: '/admin/scout-list', icon: List, label: 'รายการค้นหาทรัพย์ใหม่' },
     { path: '/admin/properties/new', icon: PlusCircle, label: 'เพิ่มทรัพย์ลงเว็บไซต์' },
     { path: '/admin/spreadsheet', icon: Table2, label: 'รายการทรัพย์ในเว็บไซต์' },
-    { path: '/admin/scout', icon: Camera, label: 'ค้นหาทรัพย์ใหม่' },
 ];
 
 function AdminLayout() {
@@ -130,7 +132,7 @@ function AdminLayout() {
                         <Menu size={24} />
                     </button>
                     <div className="text-sm text-gray-500">
-                        Welcome back, <span className="font-semibold text-gray-900">{user.email}</span>
+                        Welcome back, <span className="font-semibold text-gray-900">{user.email?.replace('@24property.com', '@24property.app')}</span>
                     </div>
                     <a
                         href="/"

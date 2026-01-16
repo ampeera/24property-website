@@ -17,7 +17,7 @@ import {
     ExternalLink,
     Image as ImageIcon
 } from 'lucide-react';
-import { initGoogleAuth, signIn, signOut, isSignedIn, getCurrentUser, onAuthChange } from '../../services/googleAuth';
+import { useAuth } from '../../contexts/AuthContext';
 import { getSheetData, updateCell, appendRow, deleteRow, getCellRef, columnToLetter } from '../../services/googleSheetsService';
 import EditableCell, { CELL_TYPES, DROPDOWN_OPTIONS } from '../../components/admin/EditableCell';
 import ImageUploadCell from '../../components/admin/ImageUploadCell';
@@ -67,60 +67,24 @@ function SpreadsheetAdmin() {
     const [selectedCell, setSelectedCell] = useState(null);
     const [showAIPanel, setShowAIPanel] = useState(false);
     const [showCoverGenerator, setShowCoverGenerator] = useState(false);
-    const [user, setUser] = useState(null);
-    const [authLoading, setAuthLoading] = useState(true);
     const [pendingChanges, setPendingChanges] = useState(new Map());
-    const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
+
+    // Use auth context
+    const { user, isGoogleAuthenticated, signOut } = useAuth();
 
     const tableRef = useRef(null);
 
-    // Initialize Google Auth and listen for changes
-    useEffect(() => {
-        const init = async () => {
-            try {
-                await initGoogleAuth();
-
-                // Check initial state
-                if (isSignedIn()) {
-                    setUser(getCurrentUser());
-                    setIsGoogleSignedIn(true);
-                }
-
-                // Listen for auth changes
-                const unsubscribe = onAuthChange((authState) => {
-                    setIsGoogleSignedIn(authState.isSignedIn);
-                    setUser(authState.user);
-                    setAuthLoading(false); // Stop loading when auth state changes
-
-                    // Reload data when signed in
-                    if (authState.isSignedIn) {
-                        loadData();
-                    }
-                });
-
-                setAuthLoading(false); // Stop loading after init completes
-
-                return () => unsubscribe();
-            } catch (err) {
-                console.error('Auth init error:', err);
-                setAuthLoading(false); // Stop loading on error too
-            }
-        };
-        init();
-    }, []);
-
-    // Load data on mount
+    // Load data on mount and when auth changes
     useEffect(() => {
         loadData();
-    }, []);
+    }, [user]);
 
     // Load data from Google Sheets
     const loadData = async () => {
         setLoading(true);
         setError(null);
         try {
-            // Try to use authenticated API first
-            if (isGoogleSignedIn) {
+            if (isGoogleAuthenticated()) {
                 const sheetData = await getSheetData();
                 if (sheetData.length > 0) {
                     setHeaders(sheetData[0]);
@@ -179,26 +143,7 @@ function SpreadsheetAdmin() {
         return result;
     };
 
-    // Handle Google Sign In
-    const handleSignIn = async () => {
-        try {
-            const result = await signIn();
-            setUser(result.user);
-            setIsGoogleSignedIn(true);
-            setAuthLoading(false);
-            // Reload data with authenticated access
-            loadData();
-        } catch (err) {
-            setError('Sign in failed: ' + err.message);
-            setAuthLoading(false);
-        }
-    };
 
-    // Handle Sign Out
-    const handleSignOut = () => {
-        signOut();
-        setUser(null);
-    };
 
     // Sanitize data - replace newlines with comma+space to prevent row splits
     const sanitizeForSheet = (value) => {
@@ -221,7 +166,7 @@ function SpreadsheetAdmin() {
         setPendingChanges(prev => new Map(prev).set(key, { rowIndex, colIndex, value: sanitizedValue }));
 
         // If signed in, save immediately
-        if (isGoogleSignedIn) {
+        if (isGoogleAuthenticated()) {
             try {
                 const cellRef = getCellRef(rowIndex + 2, colIndex); // +2 for header row and 1-indexing
                 await updateCell(cellRef, sanitizedValue);
@@ -263,7 +208,7 @@ function SpreadsheetAdmin() {
     const handleAddRow = async () => {
         const newRow = headers.map(() => '');
 
-        if (isGoogleSignedIn) {
+        if (isGoogleAuthenticated()) {
             try {
                 await appendRow(newRow);
                 loadData(); // Reload to get updated data
@@ -281,7 +226,7 @@ function SpreadsheetAdmin() {
 
         if (!confirm(`ต้องการลบ ${selectedRows.size} แถวที่เลือก?`)) return;
 
-        if (isGoogleSignedIn) {
+        if (isGoogleAuthenticated()) {
             try {
                 setSaving(true);
                 // Delete from bottom to top to avoid index shifting
@@ -420,8 +365,8 @@ function SpreadsheetAdmin() {
                 <button
                     onClick={handleAddRow}
                     className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded text-sm hover:bg-green-700"
-                    disabled={!isGoogleSignedIn}
-                    title={isGoogleSignedIn ? 'Add Row' : 'Sign in to add rows'}
+                    disabled={!isGoogleAuthenticated()}
+                    title={isGoogleAuthenticated() ? 'Add Row' : 'Sign in to add rows'}
                 >
                     <Plus size={16} />
                     เพิ่มแถว
@@ -429,7 +374,7 @@ function SpreadsheetAdmin() {
 
                 <button
                     onClick={handleDeleteSelected}
-                    disabled={selectedRows.size === 0 || !isGoogleSignedIn}
+                    disabled={selectedRows.size === 0 || !isGoogleAuthenticated()}
                     className="flex items-center gap-1 px-3 py-1.5 bg-red-600 text-white rounded text-sm hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <Trash2 size={16} />

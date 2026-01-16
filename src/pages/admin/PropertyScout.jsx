@@ -13,7 +13,7 @@ import {
     Trash2,
     ExternalLink
 } from 'lucide-react';
-import { isSignedIn, getCurrentUser } from '../../services/googleAuth';
+import { useAuth } from '../../contexts/AuthContext';
 import {
     uploadScoutImage,
     saveScoutEntry,
@@ -22,7 +22,6 @@ import {
 } from '../../services/scoutService';
 
 export default function PropertyScout() {
-    const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
     const [capturedImage, setCapturedImage] = useState(null);
     const [imageFile, setImageFile] = useState(null);
     const [location, setLocation] = useState(null);
@@ -37,10 +36,10 @@ export default function PropertyScout() {
 
     const fileInputRef = useRef(null);
 
-    // Check auth state on mount
-    useEffect(() => {
-        setIsGoogleSignedIn(isSignedIn());
-    }, []);
+    // Use auth context
+    const { user, isGoogleAuthenticated, getAccessToken } = useAuth();
+
+
 
     // Handle image capture/selection
     const handleImageCapture = async (e) => {
@@ -102,8 +101,8 @@ export default function PropertyScout() {
             return;
         }
 
-        if (!isGoogleSignedIn) {
-            setError('กรุณาเข้าสู่ระบบ Google ที่หน้า Dashboard ก่อน');
+        if (!isGoogleAuthenticated()) {
+            setError('ไม่มีสิทธิ์เข้าถึง Google API');
             return;
         }
 
@@ -155,28 +154,8 @@ export default function PropertyScout() {
         }
     };
 
-    // Check if user is signed in to Google
-    if (!isGoogleSignedIn) {
-        return (
-            <div className="max-w-lg mx-auto">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-                    <AlertCircle className="mx-auto mb-4 text-yellow-500" size={48} />
-                    <h2 className="text-lg font-semibold text-yellow-800 mb-2">
-                        ต้องเข้าสู่ระบบ Google ก่อน
-                    </h2>
-                    <p className="text-yellow-700 mb-4">
-                        กรุณาไปที่หน้า "แดชบอร์ด" แล้วกด "Sign in with Google" เพื่อใช้งานฟีเจอร์นี้
-                    </p>
-                    <a
-                        href="/admin"
-                        className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        ไปหน้าแดชบอร์ด
-                    </a>
-                </div>
-            </div>
-        );
-    }
+
+
 
     return (
         <div className="max-w-lg mx-auto space-y-6">

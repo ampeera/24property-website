@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Building2, LogIn, LogOut, Loader2 } from 'lucide-react';
+import { Building2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { PropertyService } from '../../services/PropertyService';
-import { initGoogleAuth, signIn, signOut, isSignedIn, getCurrentUser, onAuthChange } from '../../services/googleAuth';
 
 function StatCard({ icon: Icon, label, value, color, link }) {
     const content = (
@@ -27,36 +26,6 @@ function Dashboard() {
         properties: 0
     });
     const [loading, setLoading] = useState(true);
-    const [user, setUser] = useState(null);
-    const [authLoading, setAuthLoading] = useState(true);
-    const [isGoogleSignedIn, setIsGoogleSignedIn] = useState(false);
-
-    // Initialize Google Auth
-    useEffect(() => {
-        const init = async () => {
-            try {
-                await initGoogleAuth();
-
-                if (isSignedIn()) {
-                    setUser(getCurrentUser());
-                    setIsGoogleSignedIn(true);
-                }
-
-                const unsubscribe = onAuthChange((authState) => {
-                    setIsGoogleSignedIn(authState.isSignedIn);
-                    setUser(authState.user);
-                    setAuthLoading(false);
-                });
-
-                setAuthLoading(false);
-                return () => unsubscribe();
-            } catch (err) {
-                console.error('Auth init error:', err);
-                setAuthLoading(false);
-            }
-        };
-        init();
-    }, []);
 
     useEffect(() => {
         loadDashboardData();
@@ -75,24 +44,6 @@ function Dashboard() {
         }
     }
 
-    const handleSignIn = async () => {
-        try {
-            const result = await signIn();
-            setUser(result.user);
-            setIsGoogleSignedIn(true);
-            setAuthLoading(false);
-        } catch (err) {
-            console.error('Sign in failed:', err);
-            setAuthLoading(false);
-        }
-    };
-
-    const handleSignOut = () => {
-        signOut();
-        setUser(null);
-        setIsGoogleSignedIn(false);
-    };
-
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -110,52 +61,6 @@ function Dashboard() {
                 </div>
             </div>
 
-            {/* Google Sign In Section */}
-            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                <h3 className="text-gray-900 font-semibold mb-4">เชื่อมต่อ Google เพื่อแก้ไขข้อมูล</h3>
-
-                {authLoading ? (
-                    <div className="flex items-center gap-2 text-gray-500">
-                        <Loader2 className="animate-spin" size={20} />
-                        <span>กำลังตรวจสอบสถานะ...</span>
-                    </div>
-                ) : user || getCurrentUser() ? (
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <img
-                                src={user?.picture || getCurrentUser()?.picture}
-                                alt=""
-                                className="w-10 h-10 rounded-full"
-                            />
-                            <div>
-                                <p className="font-medium text-gray-900">{user?.name || getCurrentUser()?.name}</p>
-                                <p className="text-sm text-green-600">เชื่อมต่อแล้ว ✓</p>
-                            </div>
-                        </div>
-                        <button
-                            onClick={handleSignOut}
-                            className="flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                            <LogOut size={18} />
-                            ออกจากระบบ Google
-                        </button>
-                    </div>
-                ) : (
-                    <div className="flex items-center justify-between">
-                        <p className="text-gray-500 text-sm">
-                            ลงชื่อเข้าใช้ Google เพื่อเพิ่ม/แก้ไขข้อมูลทรัพย์ในระบบ
-                        </p>
-                        <button
-                            onClick={handleSignIn}
-                            className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            <LogIn size={18} />
-                            Sign in with Google
-                        </button>
-                    </div>
-                )}
-            </div>
-
             {/* Stats Grid */}
             <div className="grid grid-cols-1 gap-6">
                 <StatCard
@@ -171,9 +76,10 @@ function Dashboard() {
             <div className="bg-blue-50 border border-blue-100 rounded-xl p-6">
                 <h3 className="text-blue-900 font-semibold mb-2">วิธีใช้งานระบบ</h3>
                 <ul className="text-blue-700 text-sm space-y-1">
+                    <li>• <strong>ค้นหาทรัพย์ใหม่</strong> - ถ่ายรูปป้ายประกาศหน้างานพร้อมบันทึกพิกัด GPS</li>
+                    <li>• <strong>รายการค้นหาทรัพย์ใหม่</strong> - ดูรายการทรัพย์ที่ถ่ายไว้</li>
                     <li>• <strong>เพิ่มทรัพย์ลงเว็บไซต์</strong> - ใช้ฟอร์มเพื่อเพิ่มทรัพย์ใหม่พร้อมรายละเอียดครบถ้วน</li>
                     <li>• <strong>รายการทรัพย์ในเว็บไซต์</strong> - ดูและแก้ไขข้อมูลทรัพย์ทั้งหมดในรูปแบบตาราง</li>
-                    <li>• ต้อง <strong>Sign in with Google</strong> ก่อนจึงจะสามารถเพิ่มหรือแก้ไขข้อมูลได้</li>
                 </ul>
             </div>
         </div>

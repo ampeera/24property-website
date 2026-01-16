@@ -13,7 +13,7 @@ import {
     CheckCircle,
     Image as ImageIcon
 } from 'lucide-react';
-import { initGoogleAuth, isSignedIn, signIn, getCurrentUser } from '../../services/googleAuth';
+import { useAuth } from '../../contexts/AuthContext';
 import { getSheetData, appendRow, updateRow } from '../../services/googleSheetsService';
 import { uploadImage, compressImage } from '../../services/googleDriveService';
 import zonesData from '../../data/zones.json';
@@ -90,29 +90,23 @@ function PropertyForm() {
     const [uploading, setUploading] = useState({});
     const [error, setError] = useState(null);
     const [success, setSuccess] = useState(null);
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [user, setUser] = useState(null);
     const [activeTab, setActiveTab] = useState('thai');
 
-    // Initialize auth and load data
+    // Use auth context
+    const { user, isGoogleAuthenticated } = useAuth();
+
+    // Load data when user is authenticated
     useEffect(() => {
         const init = async () => {
-            try {
-                await initGoogleAuth();
-                if (isSignedIn()) {
-                    setIsAuthenticated(true);
-                    setUser(getCurrentUser());
-                    await loadHeaders();
-                    if (isEditing) {
-                        await loadPropertyData();
-                    }
+            if (user && isGoogleAuthenticated()) {
+                await loadHeaders();
+                if (isEditing) {
+                    await loadPropertyData();
                 }
-            } catch (err) {
-                console.error('Init error:', err);
             }
         };
         init();
-    }, [id]);
+    }, [id, user]);
 
     // Load headers from Sheet
     const loadHeaders = async () => {
@@ -176,17 +170,7 @@ function PropertyForm() {
         }
     };
 
-    // Handle sign in
-    const handleSignIn = async () => {
-        try {
-            const result = await signIn();
-            setUser(result.user);
-            setIsAuthenticated(true);
-            await loadHeaders();
-        } catch (err) {
-            setError('Sign in failed: ' + err.message);
-        }
-    };
+
 
     // Handle image upload
     const handleImageUpload = async (fieldKey, files) => {
@@ -306,26 +290,7 @@ function PropertyForm() {
     // Get fields by section (filter out hidden and image types)
     const getFieldsBySection = (section) => SHEET_COLUMNS.filter(c => c.section === section && c.type !== 'image' && c.type !== 'hidden');
 
-    // Not authenticated
-    if (!isAuthenticated) {
-        return (
-            <div className="max-w-2xl mx-auto py-12 px-4">
-                <div className="bg-white rounded-2xl shadow-sm p-8 text-center border border-gray-100">
-                    <div className="w-20 h-20 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <AlertCircle size={40} />
-                    </div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-3">กรุณาลงชื่อเข้าใช้</h1>
-                    <p className="text-gray-500 mb-8">คุณต้องลงชื่อเข้าใช้ด้วย Google เพื่อเพิ่มหรือแก้ไขรายการ</p>
-                    <button
-                        onClick={handleSignIn}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white font-medium rounded-xl hover:bg-blue-700 transition-all"
-                    >
-                        Sign in with Google
-                    </button>
-                </div>
-            </div>
-        );
-    }
+
 
     if (loading) {
         return (

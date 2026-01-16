@@ -244,9 +244,145 @@ export const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
     });
 };
 
+// Get all scout entries from Google Sheet
+export const getScoutEntries = async () => {
+    const token = getAccessToken();
+    if (!token) {
+        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
+    }
+
+    if (!SCOUT_SHEET_ID) {
+        throw new Error('ไม่พบ VITE_SCOUT_SHEET_ID');
+    }
+
+    const response = await fetch(
+        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/A:D?majorDimension=ROWS`,
+        {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        }
+    );
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'ดึงข้อมูลไม่สำเร็จ');
+    }
+
+    const data = await response.json();
+    const rows = data.values || [];
+
+    // Skip header row (first row), map remaining to objects
+    // rowIndex starts at 2 because row 1 is header
+    return rows.slice(1).map((row, index) => ({
+        rowIndex: index + 2, // 2-indexed (skipping header at row 1)
+        datetime: row[0] || '',
+        imageUrl: row[1] || '',
+        coordinates: row[2] || '',
+        notes: row[3] || ''
+    }));
+};
+
+// Delete a scout entry from Google Sheet by row index
+export const deleteScoutEntry = async (rowIndex) => {
+    const token = getAccessToken();
+    if (!token) {
+        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
+    }
+
+    if (!SCOUT_SHEET_ID) {
+        throw new Error('ไม่พบ VITE_SCOUT_SHEET_ID');
+    }
+
+    // Get sheet ID (GID) - usually 0 for first sheet
+    const sheetMetaResponse = await fetch(
+        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}?fields=sheets.properties`,
+        {
+            headers: {
+                'Authorization': `Bearer ${token}`
+            }
+        }
+    );
+
+    if (!sheetMetaResponse.ok) {
+        throw new Error('ไม่สามารถดึงข้อมูล Sheet ได้');
+    }
+
+    const sheetMeta = await sheetMetaResponse.json();
+    const sheetId = sheetMeta.sheets?.[0]?.properties?.sheetId || 0;
+
+    // Delete the row using batchUpdate
+    const response = await fetch(
+        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}:batchUpdate`,
+        {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                requests: [{
+                    deleteDimension: {
+                        range: {
+                            sheetId: sheetId,
+                            dimension: 'ROWS',
+                            startIndex: rowIndex - 1, // 0-indexed
+                            endIndex: rowIndex // exclusive
+                        }
+                    }
+                }]
+            })
+        }
+    );
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'ลบข้อมูลไม่สำเร็จ');
+    }
+
+    return await response.json();
+};
+
+// Update scout entry notes in Google Sheet
+export const updateScoutNotes = async (rowIndex, notes) => {
+    const token = getAccessToken();
+    if (!token) {
+        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
+    }
+
+    if (!SCOUT_SHEET_ID) {
+        throw new Error('ไม่พบ VITE_SCOUT_SHEET_ID');
+    }
+
+    // Update only the notes column (D)
+    const response = await fetch(
+        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/D${rowIndex}?valueInputOption=USER_ENTERED`,
+        {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                values: [[notes]]
+            })
+        }
+    );
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error?.message || 'อัพเดทหมายเหตุไม่สำเร็จ');
+    }
+
+    return await response.json();
+};
+
 export default {
     uploadScoutImage,
     saveScoutEntry,
+    getScoutEntries,
+    deleteScoutEntry,
+    updateScoutNotes,
     getCurrentLocation,
     compressImage
 };
