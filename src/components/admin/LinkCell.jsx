@@ -21,11 +21,11 @@ function LinkCell({
     const getGoogleMapsUrl = (coords) => {
         if (!coords) return '#';
 
-        // Try to extract lat,lng from the value
-        const match = coords.match(/([\d.-]+),([\d.-]+)/);
+        // Try to extract lat,lng from the value (handle optional whitespace around comma)
+        const match = coords.match(/([\d.-]+)\s*,\s*([\d.-]+)/);
         if (match) {
-            const lat = match[1];
-            const lng = match[2];
+            const lat = match[1].trim();
+            const lng = match[2].trim();
             return `https://www.google.com/maps?q=${lat},${lng}`;
         }
 
