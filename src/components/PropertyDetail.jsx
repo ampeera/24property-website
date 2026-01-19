@@ -75,6 +75,25 @@ function PropertyDetail({ property, onClose, onFutureView }) {
         return textObj[i18n.language] || textObj['en'] || textObj['th'] || '';
     };
 
+    // Helper function to convert decimal degrees to DMS format
+    const convertToDMS = (lat, lng) => {
+        const toDMS = (decimal, isLat) => {
+            const absolute = Math.abs(decimal);
+            const degrees = Math.floor(absolute);
+            const minutesNotTruncated = (absolute - degrees) * 60;
+            const minutes = Math.floor(minutesNotTruncated);
+            const seconds = ((minutesNotTruncated - minutes) * 60).toFixed(1);
+
+            const direction = isLat
+                ? (decimal >= 0 ? 'N' : 'S')
+                : (decimal >= 0 ? 'E' : 'W');
+
+            return `${degrees}°${minutes.toString().padStart(2, '0')}'${seconds}"${direction}`;
+        };
+
+        return `${toDMS(lat, true)} ${toDMS(lng, false)}`;
+    };
+
     return (
         <AnimatePresence>
             <motion.div
@@ -201,8 +220,8 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                                     </svg>
                                     <div>
                                         <p className="text-sm font-semibold text-gray-900">{t('property.position')}</p>
-                                        <p className="text-xs text-gray-500 font-mono">
-                                            {property.position.lat?.toFixed(6)}, {property.position.lng?.toFixed(6)}
+                                        <p className="text-xs text-gray-500">
+                                            {convertToDMS(property.position.lat, property.position.lng)}
                                         </p>
                                     </div>
                                 </div>
