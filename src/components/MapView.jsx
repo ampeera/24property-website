@@ -19,7 +19,7 @@ const defaultCenter = {
 
 
 
-function MapView({ activeZone, language, properties = [], onPropertySelect, isLoading, showAllZones = false }) {
+function MapView({ activeZone, language, properties = [], onPropertySelect, isLoading, showAllZones = false, selectedPropertyId = null }) {
     const { t } = useTranslation();
     const { isLoaded, loadError } = useJsApiLoader({
         id: 'google-map-script',
@@ -176,6 +176,7 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
                             key={property.id}
                             property={property}
                             onClick={onPropertySelect}
+                            isSelected={selectedPropertyId === property.id}
                         />
                     ))
                 }

@@ -162,7 +162,7 @@ const extractCoordinates = (row) => {
     let lat = parseFloat(row['ละติจูด'] || row['Latitude'] || 0);
     let lng = parseFloat(row['ลองจิจูด'] || row['Longitude'] || 0);
 
-    const mapLink = row['พิกัด'] || row['ลิงก์แผนที่'] || row['Google Map Link'] || '';
+    const mapLink = (row['พิกัด'] || row['ลิงก์แผนที่'] || row['Google Map Link'] || '').trim();
     if ((lat === 0 || lng === 0) && mapLink) {
         // Pattern 1: @lat,lng format (standard Google Maps URL)
         // Example: https://www.google.com/maps/place/.../@12.950744,100.9835819,17z/...
@@ -221,10 +221,10 @@ const extractCoordinates = (row) => {
             }
         }
 
-        // Pattern 7: Simple coordinate format (just lat,lng)
-        // Example: 12.950744,100.9835819
+        // Pattern 7: Simple coordinate format (just lat,lng) - try with optional whitespace
+        // Example: 12.950744,100.9835819 or 12.950744, 100.9835819
         if (lat === 0 || lng === 0) {
-            match = mapLink.match(/^([\d.-]+),([\d.-]+)$/);
+            match = mapLink.match(/^([\d.-]+)\s*,\s*([\d.-]+)$/);
             if (match) {
                 lat = parseFloat(match[1]);
                 lng = parseFloat(match[2]);

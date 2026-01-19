@@ -237,6 +237,7 @@ function App() {
         properties={filteredProperties}
         onPropertySelect={handlePropertySelect}
         isLoading={isLoading}
+        selectedPropertyId={selectedProperty?.id}
       />
 
       {/* Property Detail Drawer */}

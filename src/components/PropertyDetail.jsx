@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, TrendingUp, Users, DollarSign, ArrowRight, AlertCircle, Globe } from 'lucide-react';
+import { X, TrendingUp, Users, ArrowRight, AlertCircle, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
 import { SUPPORTED_LANGUAGES } from '../i18n';
@@ -33,15 +33,39 @@ function PropertyDetail({ property, onClose, onFutureView }) {
         return statusMap[status] || status;
     };
 
-    // Helper function to get translated type
-    const getTypeText = (type) => {
-        const typeMap = {
-            'land': t('property.type_land'),
-            'house': t('property.type_house'),
-            'condo': t('property.type_condo'),
-            'factory': t('property.type_factory')
+    // Helper function to get translated type - handles both Thai labels and English keys
+    const getTypeText = (typeOrLabel) => {
+        // Map Thai labels to translation keys
+        const thaiToKey = {
+            'ที่ดิน': 'type_land',
+            'บ้าน': 'type_house',
+            'คอนโด': 'type_condo',
+            'ทาวน์โฮม': 'type_townhome',
+            'อาคารพาณิชย์': 'type_commercial',
+            'โรงงาน': 'type_factory',
+            'โกดัง': 'type_warehouse',
         };
-        return typeMap[type] || type;
+
+        // Map English keys to translation keys
+        const englishToKey = {
+            'land': 'type_land',
+            'house': 'type_house',
+            'condo': 'type_condo',
+            'townhome': 'type_townhome',
+            'commercial': 'type_commercial',
+            'factory': 'type_factory',
+            'warehouse': 'type_warehouse',
+            'industrial': 'type_factory',
+            'residential': 'type_house',
+        };
+
+        // Try to find translation key
+        const key = thaiToKey[typeOrLabel] || englishToKey[typeOrLabel?.toLowerCase()];
+        if (key) {
+            return t(`property.${key}`);
+        }
+
+        return typeOrLabel || '-';
     };
 
     // Helper function to get localized text
@@ -165,27 +189,21 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                             <div className="flex items-start gap-3">
                                 <Users size={16} className="text-gray-400 mt-1" />
                                 <div>
-                                    <p className="text-sm font-semibold text-gray-900">{t('property.type')}: {getTypeText(property.type)}</p>
+                                    <p className="text-sm font-semibold text-gray-900">{t('property.type')}: {getTypeText(property.typeLabel || property.type)}</p>
                                     <p className="text-xs text-gray-500">{t('property.grade')}: {property.grade || '-'}</p>
                                 </div>
                             </div>
-                            {property.mapLink && (
+                            {property.position && (
                                 <div className="flex items-start gap-3">
-                                    <DollarSign size={16} className="text-gray-400 mt-1" />
+                                    <svg className="w-4 h-4 text-gray-400 mt-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                                        <circle cx="12" cy="10" r="3" />
+                                    </svg>
                                     <div>
                                         <p className="text-sm font-semibold text-gray-900">{t('property.position')}</p>
-                                        <a
-                                            href={property.mapLink}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="text-xs text-blue-600 hover:underline flex items-center gap-1"
-                                        >
-                                            {t('property.view_on_google_maps')}
-                                            <svg className="w-3 h-3" viewBox="0 0 20 20" fill="currentColor">
-                                                <path d="M11 3a1 1 0 100 2h2.586l-6.293 6.293a1 1 0 101.414 1.414L15 6.414V9a1 1 0 102 0V4a1 1 0 00-1-1h-5z" />
-                                                <path d="M5 5a2 2 0 00-2 2v8a2 2 0 002 2h8a2 2 0 002-2v-3a1 1 0 10-2 0v3H5V7h3a1 1 0 000-2H5z" />
-                                            </svg>
-                                        </a>
+                                        <p className="text-xs text-gray-500 font-mono">
+                                            {property.position.lat?.toFixed(6)}, {property.position.lng?.toFixed(6)}
+                                        </p>
                                     </div>
                                 </div>
                             )}

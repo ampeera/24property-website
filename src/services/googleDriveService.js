@@ -1,19 +1,28 @@
 // Google Drive API Service
 // สำหรับอัพโหลดรูปภาพไป Google Drive
+// รองรับ auto-refresh token
 
-import { getAccessToken, refreshToken } from './googleAuth';
+import { getAccessToken, getValidAccessToken, refreshToken } from './googleAuth';
 
 const FOLDER_ID = import.meta.env.VITE_GOOGLE_DRIVE_FOLDER_ID;
 const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const UPLOAD_API_BASE = 'https://www.googleapis.com/upload/drive/v3';
 
-// Helper to make authenticated requests
-const makeRequest = async (url, options = {}) => {
-    let token = getAccessToken();
+// Helper to get valid token (with auto-refresh)
+const getToken = async () => {
+    // Try to get a valid token (auto-refresh if expired)
+    let token = await getValidAccessToken();
 
     if (!token) {
-        throw new Error('Not authenticated. Please sign in with Google.');
+        throw new Error('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
     }
+
+    return token;
+};
+
+// Helper to make authenticated requests with auto-retry on 401
+const makeRequest = async (url, options = {}) => {
+    let token = await getToken();
 
     const headers = {
         'Authorization': `Bearer ${token}`,
@@ -22,14 +31,16 @@ const makeRequest = async (url, options = {}) => {
 
     let response = await fetch(url, { ...options, headers });
 
-    // If token expired, refresh and retry
+    // If token expired (401), try to refresh and retry once
     if (response.status === 401) {
+        console.log('[DriveService] Got 401, attempting token refresh...');
         try {
             token = await refreshToken();
             headers.Authorization = `Bearer ${token}`;
             response = await fetch(url, { ...options, headers });
         } catch (error) {
-            throw new Error('Session expired. Please sign in again.');
+            console.error('[DriveService] Token refresh failed:', error);
+            throw new Error('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
         }
     }
 
@@ -43,10 +54,7 @@ const makeRequest = async (url, options = {}) => {
 
 // Upload an image file to Google Drive
 export const uploadImage = async (file, customFolderId = null) => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('Not authenticated. Please sign in with Google.');
-    }
+    const token = await getToken();
 
     const folderId = customFolderId || FOLDER_ID;
 
@@ -62,7 +70,7 @@ export const uploadImage = async (file, customFolderId = null) => {
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', file);
 
-    const response = await fetch(
+    let response = await fetch(
         `${UPLOAD_API_BASE}/files?uploadType=multipart&fields=id,name,webViewLink,webContentLink`,
         {
             method: 'POST',
@@ -72,6 +80,22 @@ export const uploadImage = async (file, customFolderId = null) => {
             body: form
         }
     );
+
+    // Retry on 401
+    if (response.status === 401) {
+        console.log('[DriveService] Upload got 401, refreshing token...');
+        const newToken = await refreshToken();
+        response = await fetch(
+            `${UPLOAD_API_BASE}/files?uploadType=multipart&fields=id,name,webViewLink,webContentLink`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${newToken}`
+                },
+                body: form
+            }
+        );
+    }
 
     if (!response.ok) {
         const error = await response.json();
@@ -147,12 +171,9 @@ export const getShareableLink = async (fileId) => {
 
 // Delete a file from Drive
 export const deleteFile = async (fileId) => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('Not authenticated. Please sign in with Google.');
-    }
+    const token = await getToken();
 
-    const response = await fetch(
+    let response = await fetch(
         `${DRIVE_API_BASE}/files/${fileId}`,
         {
             method: 'DELETE',
@@ -161,6 +182,20 @@ export const deleteFile = async (fileId) => {
             }
         }
     );
+
+    // Retry on 401
+    if (response.status === 401) {
+        const newToken = await refreshToken();
+        response = await fetch(
+            `${DRIVE_API_BASE}/files/${fileId}`,
+            {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${newToken}`
+                }
+            }
+        );
+    }
 
     if (!response.ok && response.status !== 204) {
         throw new Error('Failed to delete file');

@@ -1,19 +1,28 @@
 // Google Sheets API Service
 // สำหรับอ่าน/เขียนข้อมูลใน Google Sheets
+// รองรับ auto-refresh token
 
-import { getAccessToken, refreshToken } from './googleAuth';
+import { getAccessToken, getValidAccessToken, refreshToken } from './googleAuth';
 
 const SHEET_ID = import.meta.env.VITE_GOOGLE_SHEETS_ID;
 const SHEET_GID = '681312581';
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
-// Helper to make authenticated requests
-const makeRequest = async (url, options = {}) => {
-    let token = getAccessToken();
+// Helper to get valid token (with auto-refresh)
+const getToken = async () => {
+    // Try to get a valid token (auto-refresh if expired)
+    let token = await getValidAccessToken();
 
     if (!token) {
-        throw new Error('Not authenticated. Please sign in with Google.');
+        throw new Error('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
     }
+
+    return token;
+};
+
+// Helper to make authenticated requests with auto-retry on 401
+const makeRequest = async (url, options = {}) => {
+    let token = await getToken();
 
     const headers = {
         'Authorization': `Bearer ${token}`,
@@ -23,14 +32,16 @@ const makeRequest = async (url, options = {}) => {
 
     let response = await fetch(url, { ...options, headers });
 
-    // If token expired, refresh and retry
+    // If token expired (401), try to refresh and retry once
     if (response.status === 401) {
+        console.log('[SheetsService] Got 401, attempting token refresh...');
         try {
             token = await refreshToken();
             headers.Authorization = `Bearer ${token}`;
             response = await fetch(url, { ...options, headers });
         } catch (error) {
-            throw new Error('Session expired. Please sign in again.');
+            console.error('[SheetsService] Token refresh failed:', error);
+            throw new Error('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
         }
     }
 

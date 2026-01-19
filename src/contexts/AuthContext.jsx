@@ -1,11 +1,14 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
     initGoogleAuth,
     signIn as googleSignIn,
     signOut as googleSignOut,
     getCurrentUser,
     getAccessToken,
-    onAuthChange
+    getValidAccessToken,
+    refreshToken,
+    onAuthChange,
+    isTokenValid
 } from '../services/googleAuth';
 
 const AuthContext = createContext({});
@@ -39,6 +42,12 @@ export const AuthProvider = ({ children }) => {
     const [profile, setProfile] = useState(null);
     const [loading, setLoading] = useState(true);
     const [googleAuthReady, setGoogleAuthReady] = useState(false);
+    const [tokenError, setTokenError] = useState(null);
+
+    const clearSession = useCallback(() => {
+        localStorage.removeItem(SESSION_KEY);
+        localStorage.removeItem(SESSION_EXPIRY_KEY);
+    }, []);
 
     // Initialize Google Auth and check for existing session
     useEffect(() => {
@@ -61,6 +70,18 @@ export const AuthProvider = ({ children }) => {
                         const userData = JSON.parse(sessionData);
                         setUser(userData);
                         setProfile({ role: 'ADMIN', name: userData.name || 'Admin' });
+
+                        // Try to refresh token in background if it's expired
+                        if (!isTokenValid()) {
+                            console.log('[Auth] Token expired, attempting silent refresh...');
+                            try {
+                                await refreshToken();
+                                console.log('[Auth] Silent refresh successful');
+                            } catch (error) {
+                                console.log('[Auth] Silent refresh failed, user may need to re-login:', error.message);
+                                setTokenError('Token หมดอายุ กรุณาเข้าสู่ระบบใหม่');
+                            }
+                        }
                     } else {
                         // Session expired, clear it
                         clearSession();
@@ -82,15 +103,35 @@ export const AuthProvider = ({ children }) => {
                 setUser(null);
                 setProfile(null);
             }
+            // Clear token error when successfully authenticated
+            if (authState.isSignedIn) {
+                setTokenError(null);
+            }
         });
 
         return () => unsubscribe();
     }, []);
 
-    const clearSession = () => {
-        localStorage.removeItem(SESSION_KEY);
-        localStorage.removeItem(SESSION_EXPIRY_KEY);
-    };
+    // Auto-refresh token periodically (every 50 minutes to be safe)
+    useEffect(() => {
+        if (!user || !googleAuthReady) return;
+
+        const refreshInterval = setInterval(async () => {
+            console.log('[Auth] Periodic token refresh check...');
+            if (!isTokenValid()) {
+                try {
+                    await refreshToken();
+                    console.log('[Auth] Periodic refresh successful');
+                    setTokenError(null);
+                } catch (error) {
+                    console.error('[Auth] Periodic refresh failed:', error);
+                    setTokenError('Token หมดอายุ กรุณาเข้าสู่ระบบใหม่');
+                }
+            }
+        }, 50 * 60 * 1000); // Every 50 minutes
+
+        return () => clearInterval(refreshInterval);
+    }, [user, googleAuthReady]);
 
     const signUp = async () => ({ error: { message: 'Signup disabled for admin panel' } });
 
@@ -138,13 +179,14 @@ export const AuthProvider = ({ children }) => {
             };
             console.log('[Auth] Login successful:', userData.email);
 
-            // Save session to localStorage
+            // Save session to localStorage (30 days by default)
             const expiryTime = Date.now() + getSessionDurationMs();
             localStorage.setItem(SESSION_KEY, JSON.stringify(userData));
             localStorage.setItem(SESSION_EXPIRY_KEY, expiryTime.toString());
 
             setUser(userData);
             setProfile({ role: 'ADMIN', name: userData.name });
+            setTokenError(null);
 
             return { data: { user: userData }, error: null };
         } catch (error) {
@@ -168,6 +210,7 @@ export const AuthProvider = ({ children }) => {
         clearSession();
         setUser(null);
         setProfile(null);
+        setTokenError(null);
 
         return { error: null };
     };
@@ -181,18 +224,47 @@ export const AuthProvider = ({ children }) => {
         return !!getAccessToken();
     };
 
+    // Get a valid access token, auto-refreshing if needed
+    const getValidToken = useCallback(async () => {
+        try {
+            const token = await getValidAccessToken();
+            if (token) {
+                setTokenError(null);
+            }
+            return token;
+        } catch (error) {
+            setTokenError('Token หมดอายุ กรุณาเข้าสู่ระบบใหม่');
+            return null;
+        }
+    }, []);
+
+    // Force refresh the token
+    const forceRefreshToken = useCallback(async () => {
+        try {
+            await refreshToken();
+            setTokenError(null);
+            return true;
+        } catch (error) {
+            setTokenError('ไม่สามารถ refresh token ได้ กรุณาเข้าสู่ระบบใหม่');
+            return false;
+        }
+    }, []);
+
     const value = {
         user,
         profile,
         loading,
         isAdmin,
         googleAuthReady,
+        tokenError,
         signUp,
         signIn,
         signOut,
         updateProfile,
         isGoogleAuthenticated,
-        getAccessToken
+        getAccessToken,
+        getValidToken,
+        forceRefreshToken
     };
 
     return (

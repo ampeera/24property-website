@@ -1,7 +1,7 @@
 // Scout Service - สำหรับระบบค้นหาทรัพย์ใหม่
-// แยกจากระบบเดิมโดยสิ้นเชิง
+// รองรับ auto-refresh token
 
-import { getAccessToken, refreshToken } from './googleAuth';
+import { getAccessToken, getValidAccessToken, refreshToken } from './googleAuth';
 
 const SCOUT_FOLDER_ID = import.meta.env.VITE_SCOUT_DRIVE_FOLDER_ID;
 const SCOUT_SHEET_ID = import.meta.env.VITE_SCOUT_SHEET_ID;
@@ -9,13 +9,22 @@ const DRIVE_API_BASE = 'https://www.googleapis.com/drive/v3';
 const UPLOAD_API_BASE = 'https://www.googleapis.com/upload/drive/v3';
 const SHEETS_API_BASE = 'https://sheets.googleapis.com/v4/spreadsheets';
 
-// Helper to make authenticated requests
-const makeRequest = async (url, options = {}) => {
-    let token = getAccessToken();
+// Helper to get valid token (with auto-refresh)
+const getToken = async () => {
+    // Try to get a valid token (auto-refresh if expired)
+    let token = await getValidAccessToken();
 
     if (!token) {
-        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
+        // If still no token, user needs to re-login
+        throw new Error('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
     }
+
+    return token;
+};
+
+// Helper to make authenticated requests with auto-retry on 401
+const makeRequest = async (url, options = {}) => {
+    let token = await getToken();
 
     const headers = {
         'Authorization': `Bearer ${token}`,
@@ -24,13 +33,15 @@ const makeRequest = async (url, options = {}) => {
 
     let response = await fetch(url, { ...options, headers });
 
-    // If token expired, refresh and retry
+    // If token expired (401), try to refresh and retry once
     if (response.status === 401) {
+        console.log('[ScoutService] Got 401, attempting token refresh...');
         try {
             token = await refreshToken();
             headers.Authorization = `Bearer ${token}`;
             response = await fetch(url, { ...options, headers });
         } catch (error) {
+            console.error('[ScoutService] Token refresh failed:', error);
             throw new Error('Session หมดอายุ กรุณาเข้าสู่ระบบใหม่');
         }
     }
@@ -62,10 +73,7 @@ const setFilePublic = async (fileId) => {
 
 // Upload image to Scout Drive folder
 export const uploadScoutImage = async (file) => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
-    }
+    const token = await getToken();
 
     if (!SCOUT_FOLDER_ID) {
         throw new Error('ไม่พบ VITE_SCOUT_DRIVE_FOLDER_ID');
@@ -87,7 +95,7 @@ export const uploadScoutImage = async (file) => {
     form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
     form.append('file', file);
 
-    const response = await fetch(
+    let response = await fetch(
         `${UPLOAD_API_BASE}/files?uploadType=multipart&fields=id,name,webViewLink`,
         {
             method: 'POST',
@@ -97,6 +105,22 @@ export const uploadScoutImage = async (file) => {
             body: form
         }
     );
+
+    // Retry on 401
+    if (response.status === 401) {
+        console.log('[ScoutService] Upload got 401, refreshing token...');
+        const newToken = await refreshToken();
+        response = await fetch(
+            `${UPLOAD_API_BASE}/files?uploadType=multipart&fields=id,name,webViewLink`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${newToken}`
+                },
+                body: form
+            }
+        );
+    }
 
     if (!response.ok) {
         const error = await response.json();
@@ -119,10 +143,7 @@ export const uploadScoutImage = async (file) => {
 
 // Save scout entry to Google Sheet
 export const saveScoutEntry = async (entry) => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
-    }
+    const token = await getToken();
 
     if (!SCOUT_SHEET_ID) {
         throw new Error('ไม่พบ VITE_SCOUT_SHEET_ID');
@@ -138,7 +159,7 @@ export const saveScoutEntry = async (entry) => {
         ]
     ];
 
-    const response = await fetch(
+    let response = await fetch(
         `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/A:D:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
         {
             method: 'POST',
@@ -152,6 +173,25 @@ export const saveScoutEntry = async (entry) => {
             })
         }
     );
+
+    // Retry on 401
+    if (response.status === 401) {
+        const newToken = await refreshToken();
+        response = await fetch(
+            `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/A:D:append?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`,
+            {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${newToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    majorDimension: 'ROWS',
+                    values: values
+                })
+            }
+        );
+    }
 
     if (!response.ok) {
         const error = await response.json();
@@ -246,78 +286,44 @@ export const compressImage = (file, maxWidth = 1920, quality = 0.8) => {
 
 // Get all scout entries from Google Sheet
 export const getScoutEntries = async () => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
-    }
-
     if (!SCOUT_SHEET_ID) {
         throw new Error('ไม่พบ VITE_SCOUT_SHEET_ID');
     }
 
-    const response = await fetch(
-        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/A:D?majorDimension=ROWS`,
-        {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        }
-    );
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'ดึงข้อมูลไม่สำเร็จ');
-    }
-
-    const data = await response.json();
-    const rows = data.values || [];
-
-    // Skip header row (first row), map remaining to objects
-    // rowIndex starts at 2 because row 1 is header
-    return rows.slice(1).map((row, index) => ({
-        rowIndex: index + 2, // 2-indexed (skipping header at row 1)
-        datetime: row[0] || '',
-        imageUrl: row[1] || '',
-        coordinates: row[2] || '',
-        notes: row[3] || ''
-    }));
+    return await makeRequest(
+        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/A:D?majorDimension=ROWS`
+    ).then(data => {
+        const rows = data.values || [];
+        // Skip header row (first row), map remaining to objects
+        return rows.slice(1).map((row, index) => ({
+            rowIndex: index + 2,
+            datetime: row[0] || '',
+            imageUrl: row[1] || '',
+            coordinates: row[2] || '',
+            notes: row[3] || ''
+        }));
+    });
 };
 
 // Delete a scout entry from Google Sheet by row index
 export const deleteScoutEntry = async (rowIndex) => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
-    }
-
     if (!SCOUT_SHEET_ID) {
         throw new Error('ไม่พบ VITE_SCOUT_SHEET_ID');
     }
 
     // Get sheet ID (GID) - usually 0 for first sheet
-    const sheetMetaResponse = await fetch(
-        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}?fields=sheets.properties`,
-        {
-            headers: {
-                'Authorization': `Bearer ${token}`
-            }
-        }
+    const sheetMeta = await makeRequest(
+        `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}?fields=sheets.properties`
     );
 
-    if (!sheetMetaResponse.ok) {
-        throw new Error('ไม่สามารถดึงข้อมูล Sheet ได้');
-    }
-
-    const sheetMeta = await sheetMetaResponse.json();
     const sheetId = sheetMeta.sheets?.[0]?.properties?.sheetId || 0;
 
     // Delete the row using batchUpdate
-    const response = await fetch(
+    return await makeRequest(
         `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}:batchUpdate`,
         {
             method: 'POST',
             headers: {
-                'Authorization': `Bearer ${token}`,
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
@@ -326,36 +332,25 @@ export const deleteScoutEntry = async (rowIndex) => {
                         range: {
                             sheetId: sheetId,
                             dimension: 'ROWS',
-                            startIndex: rowIndex - 1, // 0-indexed
-                            endIndex: rowIndex // exclusive
+                            startIndex: rowIndex - 1,
+                            endIndex: rowIndex
                         }
                     }
                 }]
             })
         }
     );
-
-    if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error?.message || 'ลบข้อมูลไม่สำเร็จ');
-    }
-
-    return await response.json();
 };
 
 // Update scout entry notes in Google Sheet
 export const updateScoutNotes = async (rowIndex, notes) => {
-    const token = getAccessToken();
-    if (!token) {
-        throw new Error('กรุณาเข้าสู่ระบบ Google ก่อน');
-    }
-
     if (!SCOUT_SHEET_ID) {
         throw new Error('ไม่พบ VITE_SCOUT_SHEET_ID');
     }
 
-    // Update only the notes column (D)
-    const response = await fetch(
+    const token = await getToken();
+
+    let response = await fetch(
         `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/D${rowIndex}?valueInputOption=USER_ENTERED`,
         {
             method: 'PUT',
@@ -368,6 +363,24 @@ export const updateScoutNotes = async (rowIndex, notes) => {
             })
         }
     );
+
+    // Retry on 401
+    if (response.status === 401) {
+        const newToken = await refreshToken();
+        response = await fetch(
+            `${SHEETS_API_BASE}/${SCOUT_SHEET_ID}/values/D${rowIndex}?valueInputOption=USER_ENTERED`,
+            {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${newToken}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    values: [[notes]]
+                })
+            }
+        );
+    }
 
     if (!response.ok) {
         const error = await response.json();
