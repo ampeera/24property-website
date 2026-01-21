@@ -647,6 +647,8 @@ function SpreadsheetAdmin() {
                         )}
                     </tbody>
                 </table>
+                {/* Spacer for easier editing of last row */}
+                <div className="h-32 shrink-0" />
             </div>
 
             {/* Pagination */}
