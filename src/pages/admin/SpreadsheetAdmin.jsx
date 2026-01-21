@@ -24,6 +24,7 @@ import ImageUploadCell from '../../components/admin/ImageUploadCell';
 import LinkCell from '../../components/admin/LinkCell';
 import AIGeneratorPanel from '../../components/admin/AIGeneratorPanel';
 import CoverImageGenerator from '../../components/admin/CoverImageGenerator';
+import zonesData from '../../data/zones.json';
 
 
 // Column configuration
@@ -159,6 +160,19 @@ function SpreadsheetAdmin() {
         // Update local state
         const newData = [...data];
         newData[rowIndex][colIndex] = sanitizedValue;
+
+        // Auto-fill zone name and icon when zone is changed
+        const columnName = headers[colIndex];
+        if (columnName === 'โซน') {
+            const zone = zonesData.find(z => z.id === sanitizedValue);
+            if (zone) {
+                const zoneNameIndex = headers.indexOf('ชื่อโซน');
+                const zoneIconIndex = headers.indexOf('ไอคอนโซน');
+                if (zoneNameIndex >= 0) newData[rowIndex][zoneNameIndex] = zone.name.th;
+                if (zoneIconIndex >= 0) newData[rowIndex][zoneIconIndex] = zone.icon;
+            }
+        }
+
         setData(newData);
 
         // Track pending change
@@ -170,6 +184,23 @@ function SpreadsheetAdmin() {
             try {
                 const cellRef = getCellRef(rowIndex + 2, colIndex); // +2 for header row and 1-indexing
                 await updateCell(cellRef, sanitizedValue);
+
+                // Also save zone name and icon if zone was changed
+                if (columnName === 'โซน') {
+                    const zone = zonesData.find(z => z.id === sanitizedValue);
+                    if (zone) {
+                        const zoneNameIndex = headers.indexOf('ชื่อโซน');
+                        const zoneIconIndex = headers.indexOf('ไอคอนโซน');
+                        if (zoneNameIndex >= 0) {
+                            const zoneNameRef = getCellRef(rowIndex + 2, zoneNameIndex);
+                            await updateCell(zoneNameRef, zone.name.th);
+                        }
+                        if (zoneIconIndex >= 0) {
+                            const zoneIconRef = getCellRef(rowIndex + 2, zoneIconIndex);
+                            await updateCell(zoneIconRef, zone.icon);
+                        }
+                    }
+                }
 
                 // Remove from pending
                 setPendingChanges(prev => {
