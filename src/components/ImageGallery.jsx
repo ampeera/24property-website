@@ -32,7 +32,7 @@ function ImageGallery({ images = [], futureImage, currentImage, onClose }) {
 
     return (
         <>
-            <div className="relative h-64 bg-gray-200 group">
+            <div className="relative aspect-square bg-gray-200 group">
                 {/* Main Image */}
                 <AnimatePresence mode="wait">
                     <motion.img
@@ -43,7 +43,7 @@ function ImageGallery({ images = [], futureImage, currentImage, onClose }) {
                         transition={{ duration: 0.3 }}
                         src={currentImages[currentIndex]}
                         alt={`Property ${activeTab} view`}
-                        className="w-full h-full object-cover cursor-pointer"
+                        className="w-full h-full object-cover object-center cursor-pointer"
                         onClick={() => setIsFullscreen(true)}
                         onError={(e) => {
                             e.target.src = 'https://source.unsplash.com/random/800x600?land';
@@ -139,11 +139,14 @@ function ImageGallery({ images = [], futureImage, currentImage, onClose }) {
                         className="fixed inset-0 z-[100] bg-black flex items-center justify-center"
                         onClick={() => setIsFullscreen(false)}
                     >
-                        <img
-                            src={currentImages[currentIndex]}
-                            alt="Fullscreen view"
-                            className="max-w-full max-h-full object-contain"
-                        />
+                        <div className="relative aspect-square max-w-[90vw] max-h-[90vh] w-full sm:w-[80vmin]">
+                            <img
+                                src={currentImages[currentIndex]}
+                                alt="Fullscreen view"
+                                className="w-full h-full object-cover object-center rounded-lg"
+                                onClick={(e) => e.stopPropagation()}
+                            />
+                        </div>
                         <button
                             onClick={() => setIsFullscreen(false)}
                             className="absolute top-4 right-4 p-3 bg-white/20 text-white rounded-full hover:bg-white/30 transition-colors"

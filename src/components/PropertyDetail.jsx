@@ -115,6 +115,7 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                 {/* Image Gallery with Current/Future tabs */}
                 <div className="relative">
                     <ImageGallery
+                        key={property.id}
                         images={property.images || []}
                         currentImage={property.currentImage}
                         futureImage={property.futureImage}

@@ -108,6 +108,10 @@ function App() {
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase().trim();
       filtered = filtered.filter(p => {
+        // Search by property ID (รหัสทรัพย์)
+        const id = (p.id || '').toLowerCase();
+        if (id.includes(query)) return true;
+
         // Search in title
         const title = typeof p.title === 'object'
           ? Object.values(p.title).join(' ').toLowerCase()

@@ -87,6 +87,10 @@ function SearchBar({ onSearch, compact = false, properties = [], zones = [], onP
 
         // Match properties
         const matches = properties.filter(p => {
+            // Match property ID (รหัสทรัพย์)
+            const id = (p.id || '').toLowerCase();
+            if (id.includes(q)) return true;
+
             const title = getText(p.title).toLowerCase();
             if (title.includes(q)) return true;
 

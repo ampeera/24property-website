@@ -53,6 +53,13 @@ export const AuthProvider = ({ children }) => {
     useEffect(() => {
         const init = async () => {
             try {
+                // Only init Google Auth on admin pages to prevent login popup on public pages
+                const isAdminPage = window.location.pathname.startsWith('/admin');
+                if (!isAdminPage) {
+                    setLoading(false);
+                    return;
+                }
+
                 // Initialize Google Auth
                 await initGoogleAuth();
                 setGoogleAuthReady(true);
