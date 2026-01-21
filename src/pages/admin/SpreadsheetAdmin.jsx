@@ -72,7 +72,7 @@ function SpreadsheetAdmin() {
     const [showCoverGenerator, setShowCoverGenerator] = useState(false);
     const [pendingChanges, setPendingChanges] = useState(new Map());
     const [currentPage, setCurrentPage] = useState(1);
-    const itemsPerPage = 50;
+    const itemsPerPage = 100;
 
     // Use auth context
     const { user, isGoogleAuthenticated, signOut } = useAuth();
