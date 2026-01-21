@@ -15,7 +15,9 @@ import {
     User,
     AlertCircle,
     ExternalLink,
-    Image as ImageIcon
+    Image as ImageIcon,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import { getSheetData, updateCell, appendRow, deleteRow, getCellRef, columnToLetter } from '../../services/googleSheetsService';
@@ -69,6 +71,8 @@ function SpreadsheetAdmin() {
     const [showAIPanel, setShowAIPanel] = useState(false);
     const [showCoverGenerator, setShowCoverGenerator] = useState(false);
     const [pendingChanges, setPendingChanges] = useState(new Map());
+    const [currentPage, setCurrentPage] = useState(1);
+    const itemsPerPage = 50;
 
     // Use auth context
     const { user, isGoogleAuthenticated, signOut } = useAuth();
@@ -226,14 +230,7 @@ function SpreadsheetAdmin() {
         setSelectedRows(newSelected);
     };
 
-    // Handle select all
-    const handleSelectAll = () => {
-        if (selectedRows.size === filteredData.length) {
-            setSelectedRows(new Set());
-        } else {
-            setSelectedRows(new Set(filteredData.map((_, i) => i)));
-        }
-    };
+    // handleSelectAll is defined after pagination logic to access paginatedData
 
     // Handle add row
     const handleAddRow = async () => {
@@ -354,6 +351,36 @@ function SpreadsheetAdmin() {
             String(cell || '').toLowerCase().includes(searchTerm.toLowerCase())
         );
     });
+
+    // Pagination
+    const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedData = filteredData.slice(startIndex, endIndex);
+
+    // Get actual row index in original data array
+    const getActualRowIndex = (pageRowIndex) => {
+        const displayedRow = paginatedData[pageRowIndex];
+        return data.findIndex(row => row === displayedRow);
+    };
+
+    // Handle select all (on current page only)
+    const handleSelectAll = () => {
+        const currentPageActualIndices = paginatedData.map((row) => data.findIndex(d => d === row));
+        const allSelected = currentPageActualIndices.every(idx => selectedRows.has(idx));
+
+        if (allSelected) {
+            // Deselect all on current page
+            const newSelected = new Set(selectedRows);
+            currentPageActualIndices.forEach(idx => newSelected.delete(idx));
+            setSelectedRows(newSelected);
+        } else {
+            // Select all on current page
+            const newSelected = new Set(selectedRows);
+            currentPageActualIndices.forEach(idx => newSelected.add(idx));
+            setSelectedRows(newSelected);
+        }
+    };
 
     // Get column config
     const getColumnConfig = (header) => {
@@ -524,99 +551,133 @@ function SpreadsheetAdmin() {
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredData.length === 0 ? (
+                        {paginatedData.length === 0 ? (
                             <tr>
                                 <td colSpan={headers.length + 2} className="text-center py-12 text-gray-500">
                                     {searchTerm ? 'ไม่พบข้อมูลที่ค้นหา' : 'ไม่มีข้อมูล'}
                                 </td>
                             </tr>
                         ) : (
-                            filteredData.map((row, rowIndex) => (
-                                <tr
-                                    key={rowIndex}
-                                    className={`
-                                        ${selectedRows.has(rowIndex) ? 'bg-blue-50' : 'hover:bg-gray-50'}
-                                        ${selectedCell?.row === rowIndex ? 'bg-blue-50/50' : ''}
+                            paginatedData.map((row, pageRowIndex) => {
+                                const actualRowIndex = getActualRowIndex(pageRowIndex);
+                                const displayRowNumber = startIndex + pageRowIndex + 1;
+                                return (
+                                    <tr
+                                        key={pageRowIndex}
+                                        className={`
+                                        ${selectedRows.has(actualRowIndex) ? 'bg-blue-50' : 'hover:bg-gray-50'}
+                                        ${selectedCell?.row === actualRowIndex ? 'bg-blue-50/50' : ''}
                                     `}
-                                >
-                                    {/* Checkbox */}
-                                    <td className="w-10 px-2 py-1 border-r border-b border-gray-200 text-center bg-gray-50">
-                                        <button
-                                            onClick={() => handleRowSelect(rowIndex)}
-                                            className="text-gray-400 hover:text-gray-600"
-                                        >
-                                            {selectedRows.has(rowIndex) ? (
-                                                <CheckSquare size={16} className="text-blue-600" />
-                                            ) : (
-                                                <Square size={16} />
-                                            )}
-                                        </button>
-                                    </td>
-                                    {/* Row Number */}
-                                    <td className="w-10 px-2 py-1 text-xs text-gray-500 border-r border-b border-gray-200 text-center bg-gray-50 font-mono">
-                                        {rowIndex + 1}
-                                    </td>
-                                    {/* Data Cells */}
-                                    {row.map((cell, colIndex) => {
-                                        const config = getColumnConfig(headers[colIndex]);
-                                        const isImageCol = config.type === CELL_TYPES.IMAGE;
-                                        const isEditing = editingCell?.row === rowIndex && editingCell?.col === colIndex;
-                                        const isSelected = selectedCell?.row === rowIndex && selectedCell?.col === colIndex;
+                                    >
+                                        {/* Checkbox */}
+                                        <td className="w-10 px-2 py-1 border-r border-b border-gray-200 text-center bg-gray-50">
+                                            <button
+                                                onClick={() => handleRowSelect(actualRowIndex)}
+                                                className="text-gray-400 hover:text-gray-600"
+                                            >
+                                                {selectedRows.has(actualRowIndex) ? (
+                                                    <CheckSquare size={16} className="text-blue-600" />
+                                                ) : (
+                                                    <Square size={16} />
+                                                )}
+                                            </button>
+                                        </td>
+                                        {/* Row Number */}
+                                        <td className="w-10 px-2 py-1 text-xs text-gray-500 border-r border-b border-gray-200 text-center bg-gray-50 font-mono">
+                                            {displayRowNumber}
+                                        </td>
+                                        {/* Data Cells */}
+                                        {row.map((cell, colIndex) => {
+                                            const config = getColumnConfig(headers[colIndex]);
+                                            const isImageCol = config.type === CELL_TYPES.IMAGE;
+                                            const isEditing = editingCell?.row === actualRowIndex && editingCell?.col === colIndex;
+                                            const isSelected = selectedCell?.row === actualRowIndex && selectedCell?.col === colIndex;
 
-                                        if (isImageCol) {
+                                            if (isImageCol) {
+                                                return (
+                                                    <ImageUploadCell
+                                                        key={colIndex}
+                                                        value={cell}
+                                                        rowIndex={actualRowIndex}
+                                                        colIndex={colIndex}
+                                                        propertyData={getPropertyData(actualRowIndex)}
+                                                        isSelected={isSelected}
+                                                        onValueChange={handleCellChange}
+                                                    />
+                                                );
+                                            }
+
+                                            // Link cell (map links)
+                                            if (config.type === CELL_TYPES.LINK) {
+                                                return (
+                                                    <LinkCell
+                                                        key={colIndex}
+                                                        value={cell}
+                                                        rowIndex={actualRowIndex}
+                                                        colIndex={colIndex}
+                                                        isSelected={isSelected}
+                                                        onValueChange={handleCellChange}
+                                                    />
+                                                );
+                                            }
+
                                             return (
-                                                <ImageUploadCell
+                                                <EditableCell
                                                     key={colIndex}
                                                     value={cell}
-                                                    rowIndex={rowIndex}
+                                                    rowIndex={actualRowIndex}
                                                     colIndex={colIndex}
-                                                    propertyData={getPropertyData(rowIndex)}
+                                                    columnName={headers[colIndex]}
+                                                    cellType={config.type}
+                                                    isEditing={isEditing}
                                                     isSelected={isSelected}
+                                                    onStartEdit={(r, c) => {
+                                                        setEditingCell({ row: r, col: c });
+                                                        setSelectedCell({ row: r, col: c });
+                                                    }}
+                                                    onEndEdit={() => setEditingCell(null)}
                                                     onValueChange={handleCellChange}
+                                                    onNavigate={handleNavigate}
                                                 />
                                             );
-                                        }
-
-                                        // Link cell (map links)
-                                        if (config.type === CELL_TYPES.LINK) {
-                                            return (
-                                                <LinkCell
-                                                    key={colIndex}
-                                                    value={cell}
-                                                    rowIndex={rowIndex}
-                                                    colIndex={colIndex}
-                                                    isSelected={isSelected}
-                                                    onValueChange={handleCellChange}
-                                                />
-                                            );
-                                        }
-
-                                        return (
-                                            <EditableCell
-                                                key={colIndex}
-                                                value={cell}
-                                                rowIndex={rowIndex}
-                                                colIndex={colIndex}
-                                                columnName={headers[colIndex]}
-                                                cellType={config.type}
-                                                isEditing={isEditing}
-                                                isSelected={isSelected}
-                                                onStartEdit={(r, c) => {
-                                                    setEditingCell({ row: r, col: c });
-                                                    setSelectedCell({ row: r, col: c });
-                                                }}
-                                                onEndEdit={() => setEditingCell(null)}
-                                                onValueChange={handleCellChange}
-                                                onNavigate={handleNavigate}
-                                            />
-                                        );
-                                    })}
-                                </tr>
-                            ))
+                                        })}
+                                    </tr>
+                                )
+                            })
                         )}
                     </tbody>
                 </table>
             </div>
+
+            {/* Pagination */}
+            {totalPages > 1 && (
+                <div className="bg-white border-t border-gray-200 px-4 py-2 flex items-center justify-between shrink-0">
+                    <div className="text-sm text-gray-600">
+                        แสดง {startIndex + 1}-{Math.min(endIndex, filteredData.length)} จาก {filteredData.length} รายการ
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                            disabled={currentPage === 1}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft size={16} />
+                            ก่อนหน้า
+                        </button>
+                        <span className="text-sm text-gray-600 px-3">
+                            หน้า {currentPage} / {totalPages}
+                        </span>
+                        <button
+                            onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                            disabled={currentPage === totalPages}
+                            className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 text-gray-700 rounded text-sm hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            ถัดไป
+                            <ChevronRight size={16} />
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* AI Panel */}
             {showAIPanel && (
