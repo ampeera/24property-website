@@ -65,7 +65,11 @@ const th = {
         type_factory: "โรงงาน",
         type_warehouse: "โกดัง",
         share: "แชร์",
-        link_copied: "คัดลอกลิงก์แล้ว!"
+        link_copied: "คัดลอกลิงก์แล้ว!",
+        show_street_view: "ดู Street View",
+        hide_street_view: "ซ่อน Street View",
+        no_street_view: "ไม่มี Street View ในบริเวณนี้",
+        checking_street_view: "กำลังตรวจสอบ..."
     },
     gallery: {
         current: "ปัจจุบัน",
@@ -181,7 +185,11 @@ const en = {
         type_factory: "Factory",
         type_warehouse: "Warehouse",
         share: "Share",
-        link_copied: "Link copied!"
+        link_copied: "Link copied!",
+        show_street_view: "View Street View",
+        hide_street_view: "Hide Street View",
+        no_street_view: "No Street View available nearby",
+        checking_street_view: "Checking..."
     },
     gallery: {
         current: "Current",
@@ -297,7 +305,11 @@ const zh = {
         type_factory: "工厂",
         type_warehouse: "仓库",
         share: "分享",
-        link_copied: "链接已复制!"
+        link_copied: "链接已复制!",
+        show_street_view: "查看街景",
+        hide_street_view: "隐藏街景",
+        no_street_view: "该区域没有街景",
+        checking_street_view: "正在检查..."
     },
     gallery: {
         current: "当前",

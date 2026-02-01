@@ -7,6 +7,7 @@ import SalesContact from './SalesContact';
 import ImageGallery from './ImageGallery';
 import VideoEmbed from './VideoEmbed';
 import VideoLinkButtons from './VideoLinkButtons';
+import StreetViewEmbed from './StreetViewEmbed';
 
 function PropertyDetail({ property, onClose, onFutureView }) {
     const { t, i18n } = useTranslation();
@@ -228,6 +229,14 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                                 </div>
                             )}
                         </div>
+
+                        {/* Street View Section */}
+                        {property.position && (
+                            <StreetViewEmbed
+                                lat={property.position.lat}
+                                lng={property.position.lng}
+                            />
+                        )}
                     </div>
 
                     {/* รายละเอียดเพิ่มเติม Section */}
@@ -363,7 +372,7 @@ function PropertyDetail({ property, onClose, onFutureView }) {
                     </div>
                 </div>
             </motion.div>
-        </AnimatePresence>
+        </AnimatePresence >
     );
 }
 
