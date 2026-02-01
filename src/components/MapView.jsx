@@ -42,9 +42,9 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
     useEffect(() => {
         if (map) {
             if (showAllZones || !activeZone) {
-                // Show all zones - lock zoom at level 8
+                // Show all zones - lock zoom at level 10
                 map.panTo(defaultCenter);
-                map.setZoom(8);
+                map.setZoom(10);
             } else if (activeZone?.center) {
                 // Individual zone - fitBounds to show all properties passed in (already filtered by zone)
                 // Properties are already filtered by zone in App.jsx, so use them directly
