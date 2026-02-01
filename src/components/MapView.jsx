@@ -42,15 +42,34 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
     useEffect(() => {
         if (map) {
             if (showAllZones || !activeZone) {
-                // Show all zones - zoom out to see all markers
+                // Show all zones - lock zoom at level 8
                 map.panTo(defaultCenter);
-                map.setZoom(11);
+                map.setZoom(8);
             } else if (activeZone?.center) {
-                map.panTo(activeZone.center);
-                map.setZoom(activeZone.zoom || 14);
+                // Individual zone - fitBounds to show all properties passed in (already filtered by zone)
+                // Properties are already filtered by zone in App.jsx, so use them directly
+                const validProperties = properties.filter(p =>
+                    p.coordinates?.lat && p.coordinates?.lng
+                );
+
+                if (validProperties.length > 0) {
+                    const bounds = new window.google.maps.LatLngBounds();
+                    validProperties.forEach(property => {
+                        bounds.extend(new window.google.maps.LatLng(
+                            property.coordinates.lat,
+                            property.coordinates.lng
+                        ));
+                    });
+                    // Fit bounds with padding
+                    map.fitBounds(bounds, { top: 100, right: 50, bottom: 100, left: 50 });
+                } else {
+                    // Fallback to zone center if no properties with valid coordinates
+                    map.panTo(activeZone.center);
+                    map.setZoom(12);
+                }
             }
         }
-    }, [map, activeZone, showAllZones]);
+    }, [map, activeZone, showAllZones, properties]);
 
     // Update map type when changed
     useEffect(() => {
@@ -169,16 +188,14 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
                 )}
 
                 {/* Property Markers */}
-                {!isLoading && properties
-                    .filter(p => activeZone ? p.zoneId === activeZone.id : true)
-                    .map((property) => (
-                        <PropertyMarker
-                            key={property.id}
-                            property={property}
-                            onClick={onPropertySelect}
-                            isSelected={selectedPropertyId === property.id}
-                        />
-                    ))
+                {!isLoading && properties.map((property) => (
+                    <PropertyMarker
+                        key={property.id}
+                        property={property}
+                        onClick={onPropertySelect}
+                        isSelected={selectedPropertyId === property.id}
+                    />
+                ))
                 }
             </GoogleMap>
 
