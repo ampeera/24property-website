@@ -8,6 +8,7 @@ import FutureView from './components/FutureView';
 import SearchBar from './components/SearchBar';
 import { PropertyService } from './services/PropertyService';
 import { ZoneService } from './services/ZoneService';
+import { onDataRefresh, transformToProperty, transformToZone } from './lib/googleSheets';
 import { SUPPORTED_LANGUAGES } from './i18n';
 
 function App() {
@@ -54,6 +55,20 @@ function App() {
       }
     };
     loadProperties();
+  }, []);
+
+  // Listen for background data refresh (stale-while-revalidate)
+  useEffect(() => {
+    const unsubscribe = onDataRefresh((freshData) => {
+      console.log('[App] Background refresh received, updating UI...');
+      // Update properties
+      const newProperties = freshData.map(transformToProperty);
+      setProperties(newProperties);
+      // Update zones
+      const newZones = transformToZone(freshData);
+      setZones(newZones);
+    });
+    return () => unsubscribe();
   }, []);
 
   // Use imported languages list

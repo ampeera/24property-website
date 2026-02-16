@@ -14,6 +14,75 @@ let cachedData = null;
 let cacheTime = null;
 const CACHE_DURATION = 1 * 60 * 1000; // 1 minute (reduced for faster updates)
 
+// localStorage keys for persistent cache
+const LS_DATA_KEY = '24property_cached_data';
+const LS_TIME_KEY = '24property_cached_time';
+const LS_VERSION_KEY = '24property_cache_version';
+const CACHE_VERSION = 'v1'; // Bump this to invalidate all caches
+
+// Listeners for background refresh
+let refreshListeners = [];
+
+/**
+ * Register a callback to be called when fresh data arrives from background refresh.
+ * Returns an unsubscribe function.
+ */
+export const onDataRefresh = (callback) => {
+    refreshListeners.push(callback);
+    return () => {
+        refreshListeners = refreshListeners.filter(cb => cb !== callback);
+    };
+};
+
+// Notify all listeners of fresh data
+const notifyRefreshListeners = (data) => {
+    refreshListeners.forEach(cb => {
+        try { cb(data); } catch (e) { console.error('Refresh listener error:', e); }
+    });
+};
+
+// Load data from localStorage (persistent cache)
+const loadFromLocalStorage = () => {
+    try {
+        const version = localStorage.getItem(LS_VERSION_KEY);
+        if (version !== CACHE_VERSION) {
+            // Cache version mismatch, clear old data
+            localStorage.removeItem(LS_DATA_KEY);
+            localStorage.removeItem(LS_TIME_KEY);
+            localStorage.removeItem(LS_VERSION_KEY);
+            return null;
+        }
+        const stored = localStorage.getItem(LS_DATA_KEY);
+        const time = localStorage.getItem(LS_TIME_KEY);
+        if (stored && time) {
+            return { data: JSON.parse(stored), time: parseInt(time) };
+        }
+    } catch (e) {
+        console.warn('Failed to load from localStorage:', e);
+    }
+    return null;
+};
+
+// Save data to localStorage
+const saveToLocalStorage = (data) => {
+    try {
+        localStorage.setItem(LS_DATA_KEY, JSON.stringify(data));
+        localStorage.setItem(LS_TIME_KEY, Date.now().toString());
+        localStorage.setItem(LS_VERSION_KEY, CACHE_VERSION);
+    } catch (e) {
+        console.warn('Failed to save to localStorage:', e);
+        // If localStorage is full, try to clear old data and retry
+        try {
+            localStorage.removeItem(LS_DATA_KEY);
+            localStorage.setItem(LS_DATA_KEY, JSON.stringify(data));
+            localStorage.setItem(LS_TIME_KEY, Date.now().toString());
+            localStorage.setItem(LS_VERSION_KEY, CACHE_VERSION);
+        } catch (e2) {
+            // Give up silently — site will still work, just no persistent cache
+        }
+    }
+};
+
 // Google Drive Folder for property images
 const DRIVE_IMAGE_MAP = {
     // Legacy mapping if needed, or rely on URL columns
@@ -83,24 +152,53 @@ const parseCSV = (csv) => {
     return data;
 };
 
-// Fetch data from Google Sheets
+// Fetch fresh data from Google Sheets (network only)
+const fetchFromNetwork = async () => {
+    const response = await fetch(getSheetUrl());
+    if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    const csv = await response.text();
+    return parseCSV(csv);
+};
+
+// Fetch data from Google Sheets with stale-while-revalidate
 export const fetchSheetData = async (forceRefresh = false) => {
+    // 1. Check in-memory cache first (fastest)
     if (!forceRefresh && cachedData && cacheTime && (Date.now() - cacheTime < CACHE_DURATION)) {
         return cachedData;
     }
 
-    try {
-        const response = await fetch(getSheetUrl());
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
+    // 2. Try localStorage for instant load on cold start
+    if (!forceRefresh && !cachedData) {
+        const stored = loadFromLocalStorage();
+        if (stored) {
+            cachedData = stored.data;
+            cacheTime = stored.time;
+            console.log(`[Cache] Loaded ${cachedData.length} items from localStorage (age: ${Math.round((Date.now() - cacheTime) / 1000)}s)`);
+
+            // Return cached data immediately, then refresh in background
+            fetchFromNetwork().then(freshData => {
+                cachedData = freshData;
+                cacheTime = Date.now();
+                saveToLocalStorage(freshData);
+                console.log(`[Cache] Background refresh complete: ${freshData.length} items`);
+                notifyRefreshListeners(freshData);
+            }).catch(err => {
+                console.warn('[Cache] Background refresh failed:', err);
+            });
+
+            return cachedData;
         }
+    }
 
-        const csv = await response.text();
-        const data = parseCSV(csv);
-
+    // 3. No cache available — fetch from network (blocking)
+    try {
+        const data = await fetchFromNetwork();
         cachedData = data;
         cacheTime = Date.now();
-
+        saveToLocalStorage(data);
+        console.log(`[Cache] Fresh fetch complete: ${data.length} items`);
         return data;
     } catch (error) {
         console.error('Error fetching Google Sheets data:', error);

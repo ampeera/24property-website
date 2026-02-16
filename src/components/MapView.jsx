@@ -41,32 +41,30 @@ function MapView({ activeZone, language, properties = [], onPropertySelect, isLo
 
     useEffect(() => {
         if (map) {
-            if (showAllZones || !activeZone) {
-                // Show all zones - lock zoom at level 10
+            // Always try to fitBounds to show all visible properties
+            const validProperties = properties.filter(p =>
+                p.position?.lat && p.position?.lng &&
+                p.position.lat !== 0 && p.position.lng !== 0
+            );
+
+            if (validProperties.length > 0) {
+                const bounds = new window.google.maps.LatLngBounds();
+                validProperties.forEach(property => {
+                    bounds.extend(new window.google.maps.LatLng(
+                        property.position.lat,
+                        property.position.lng
+                    ));
+                });
+                // Fit bounds with padding (account for header on top)
+                map.fitBounds(bounds, { top: 120, right: 50, bottom: 50, left: 50 });
+            } else if (activeZone?.center) {
+                // Fallback to zone center if no properties with valid coordinates
+                map.panTo(activeZone.center);
+                map.setZoom(12);
+            } else {
+                // Fallback to default center (All zones, no properties)
                 map.panTo(defaultCenter);
                 map.setZoom(10);
-            } else if (activeZone?.center) {
-                // Individual zone - fitBounds to show all properties passed in (already filtered by zone)
-                // Properties are already filtered by zone in App.jsx, so use them directly
-                const validProperties = properties.filter(p =>
-                    p.coordinates?.lat && p.coordinates?.lng
-                );
-
-                if (validProperties.length > 0) {
-                    const bounds = new window.google.maps.LatLngBounds();
-                    validProperties.forEach(property => {
-                        bounds.extend(new window.google.maps.LatLng(
-                            property.coordinates.lat,
-                            property.coordinates.lng
-                        ));
-                    });
-                    // Fit bounds with padding
-                    map.fitBounds(bounds, { top: 100, right: 50, bottom: 100, left: 50 });
-                } else {
-                    // Fallback to zone center if no properties with valid coordinates
-                    map.panTo(activeZone.center);
-                    map.setZoom(12);
-                }
             }
         }
     }, [map, activeZone, showAllZones, properties]);
